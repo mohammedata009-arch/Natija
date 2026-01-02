@@ -68,15 +68,21 @@ async function start() {
         const wb = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
         const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
         
+        if(rows.length <= 1) return alert("ملف Excel فارغ أو لا يحتوي على بيانات");
+
         for (let i = 1; i < rows.length; i++) {
             const row = rows[i];
-            if (!row[0]) continue;
+
+            if (!row[0]) {
+                console.warn(`تجاهل الصف ${i+1} لأنه لا يحتوي على اسم`);
+                continue;
+            }
 
             const data = {
                 name: row[0],
-                trainer: row[1] || "",
-                hours: row[2] || "",
-                date: row[3] || "",
+                trainer: row[1] || "غير محدد",
+                hours: row[2] || "غير محدد",
+                date: row[3] || "غير محدد",
                 serial: row[0]
             };
 
@@ -87,39 +93,44 @@ async function start() {
 }
 
 async function makePDF(bytes, data) {
-    const { PDFDocument, StandardFonts, rgb } = PDFLib;
-    const pdf = await PDFDocument.load(bytes);
-    const page = pdf.getPages()[0];
-    const { width, height } = page.getSize();
-    const offset = Number(ySlider.value);
+    try {
+        const { PDFDocument, StandardFonts, rgb } = PDFLib;
+        const pdf = await PDFDocument.load(bytes);
+        const page = pdf.getPages()[0];
+        const { width, height } = page.getSize();
+        const offset = Number(ySlider.value);
+        const font = await pdf.embedFont(StandardFonts.TimesRomanBold);
 
-    const font = await pdf.embedFont(StandardFonts.TimesRomanBold);
+        function drawElement(el, text) {
+            const fontSize = mm2pt(el.fontMM);
+            page.drawText(text, {
+                x: mm2pt(el.x),
+                y: height - mm2pt(el.y) - offset,
+                size: fontSize,
+                font,
+                color: rgb(0,0,0)
+            });
+        }
 
-    function drawElement(el, text) {
-        const fontSize = mm2pt(el.fontMM);
-        page.drawText(text, {
-            x: mm2pt(el.x),
-            y: height - mm2pt(el.y) - offset,
-            size: fontSize,
-            font,
-            color: rgb(0,0,0)
-        });
+        drawElement(elementSettingsMM.name, data.name);
+        drawElement(elementSettingsMM.trainer, `المدرب: ${data.trainer}`);
+        drawElement(elementSettingsMM.hours, `عدد الساعات: ${data.hours}`);
+        drawElement(elementSettingsMM.date, `التاريخ: ${data.date}`);
+        drawElement(elementSettingsMM.serial, `Serial: ${data.serial}`);
+
+        const out = await pdf.save();
+        const url = URL.createObjectURL(new Blob([out], { type: "application/pdf" }));
+
+        const div = document.createElement("div");
+        div.innerHTML = `👤 ${data.name} | 
+            <a href="${url}" target="_blank">معاينة</a> | 
+            <a href="${url}" download="شهادة_${data.name}.pdf">تحميل</a>`;
+        result.appendChild(div);
+
+    } catch(e) {
+        console.error("خطأ في إنشاء PDF:", e);
+        alert("حدث خطأ أثناء إنشاء المعاينة. تأكد من ملفات PDF وExcel.");
     }
-
-    drawElement(elementSettingsMM.name, data.name);
-    drawElement(elementSettingsMM.trainer, `المدرب: ${data.trainer}`);
-    drawElement(elementSettingsMM.hours, `عدد الساعات: ${data.hours}`);
-    drawElement(elementSettingsMM.date, `التاريخ: ${data.date}`);
-    drawElement(elementSettingsMM.serial, `Serial: ${data.serial}`);
-
-    const out = await pdf.save();
-    const url = URL.createObjectURL(new Blob([out], { type: "application/pdf" }));
-
-    const div = document.createElement("div");
-    div.innerHTML = `👤 ${data.name} | 
-        <a href="${url}" target="_blank">معاينة</a> | 
-        <a href="${url}" download="شهادة_${data.name}.pdf">تحميل</a>`;
-    result.appendChild(div);
 }
 </script>
 
