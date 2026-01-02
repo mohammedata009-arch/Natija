@@ -3,28 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>نظام الشهادات الذكي</title>
+<title>نظام الشهادات الذكي - منصة جاهزة</title>
 
+<!-- المكتبات -->
 <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
 
 <style>
-body{font-family:Segoe UI;background:#f5f6fa;padding:20px;text-align:center}
-.card{max-width:700px;margin:auto;background:#fff;padding:30px;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
-input,button{width:100%;margin:10px 0;padding:12px}
-button{background:#d35400;color:#fff;border:none;border-radius:8px;font-size:18px;cursor:pointer}
-.preview{margin-top:20px;text-align:right}
+body{font-family:Segoe UI, sans-serif;background:#f5f6fa;padding:20px;text-align:center;color:#333}
+.card{max-width:800px;margin:auto;background:#fff;padding:30px;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
+input[type=file], button, input[type=range]{width:100%;margin:10px 0;padding:12px;font-size:16px;border-radius:8px;border:1px solid #ccc}
+button{background:#d35400;color:#fff;border:none;cursor:pointer;transition:0.3s}
+button:hover{background:#e67e22}
+.preview{margin-top:20px;text-align:right;max-height:400px;overflow:auto;padding:10px;border:1px solid #ddd;border-radius:10px;background:#fafafa}
+.range-label{margin-top:10px;font-size:14px;color:#555}
 </style>
 </head>
 <body>
 
 <div class="card">
-<h2>🎓 توليد الشهادات من Excel</h2>
+<h2>🎓 منصة توليد الشهادات الذكية</h2>
+<p>قم برفع قالب PDF وقائمة البيانات (Excel) ثم اضغط إنشاء الشهادات</p>
 
 <input type="file" id="pdfInput" accept=".pdf">
 <input type="file" id="excelInput" accept=".xlsx,.xls">
 
-<label>⬇️ ضبط الإزاحة الرأسية (معاينة)</label>
+<div class="range-label">⬇️ ضبط الإزاحة الرأسية (معاينة)</div>
 <input type="range" id="yOffset" min="0" max="200" value="0">
 <div>القيمة: <span id="yVal">0</span></div>
 
@@ -43,32 +48,38 @@ const result = document.getElementById("result");
 ySlider.oninput = () => yVal.innerText = ySlider.value;
 
 // تحويل مم إلى نقاط PDF
-function mm2pt(mm) {
-    return mm * 72 / 25.4;
-}
+function mm2pt(mm) { return mm * 72 / 25.4; }
 
-// ==================== إعدادات العناصر بالملليمتر ====================
+// إعدادات الإحداثيات لكل عنصر (قابل للتعديل لاحقًا)
 const elementSettingsMM = {
-    name:     { x: 105, y: 150, fontMM: 10 }, // اسم الطالب
-    trainer:  { x: 20,  y: 120, fontMM: 6 },  // اسم المدرب
-    hours:    { x: 20,  y: 100, fontMM: 6 },  // عدد الساعات
-    date:     { x: 20,  y: 80,  fontMM: 6 },  // التاريخ
-    serial:   { x: 150, y: 120, fontMM: 6 }   // الرقم التسلسلي
+    name:     { x: 105, y: 150, fontMM: 10 },
+    trainer:  { x: 20,  y: 120, fontMM: 6 },
+    hours:    { x: 20,  y: 100, fontMM: 6 },
+    date:     { x: 20,  y: 80,  fontMM: 6 },
+    serial:   { x: 150, y: 120, fontMM: 6 }
 };
 
 async function start() {
     const pdfFile = pdfInput.files[0];
     const excelFile = excelInput.files[0];
-    if (!pdfFile || !excelFile) return alert("اختر الملفات");
+    if (!pdfFile || !excelFile) return alert("اختر الملفات أولاً");
+
+    result.innerHTML = "<p>⏳ جاري إنشاء الشهادات...</p>";
 
     const basePdf = await pdfFile.arrayBuffer();
-
     const reader = new FileReader();
+
     reader.onload = async e => {
         const wb = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
         const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
-        
-        if(rows.length <= 1) return alert("ملف Excel فارغ أو لا يحتوي على بيانات");
+
+        if (rows.length <= 1) {
+            result.innerHTML = "<p>⚠️ ملف Excel فارغ أو لا يحتوي على بيانات</p>";
+            return;
+        }
+
+        const zip = new JSZip();
+        result.innerHTML = ""; // مسح الرسالة
 
         for (let i = 1; i < rows.length; i++) {
             const row = rows[i];
@@ -86,51 +97,59 @@ async function start() {
                 serial: row[0]
             };
 
-            await makePDF(basePdf, data);
+            const pdfBytes = await makePDF(basePdf, data);
+
+            zip.file(`شهادة_${data.name}.pdf`, pdfBytes);
+
+            const url = URL.createObjectURL(new Blob([pdfBytes], { type: "application/pdf" }));
+            const div = document.createElement("div");
+            div.style.marginBottom = "8px";
+            div.innerHTML = `👤 <strong>${data.name}</strong> | 
+                <a href="${url}" target="_blank">معاينة</a> | 
+                <a href="${url}" download="شهادة_${data.name}.pdf">تحميل</a>`;
+            result.appendChild(div);
         }
+
+        // إضافة رابط تنزيل ZIP
+        const content = await zip.generateAsync({ type: "blob" });
+        const zipUrl = URL.createObjectURL(content);
+        const zipDiv = document.createElement("div");
+        zipDiv.style.marginTop = "15px";
+        zipDiv.innerHTML = `<strong>⬇️ تحميل جميع الشهادات دفعة واحدة:</strong> 
+            <a href="${zipUrl}" download="كل_الشهادات.zip">ZIP</a>`;
+        result.appendChild(zipDiv);
     };
+
     reader.readAsArrayBuffer(excelFile);
 }
 
 async function makePDF(bytes, data) {
-    try {
-        const { PDFDocument, StandardFonts, rgb } = PDFLib;
-        const pdf = await PDFDocument.load(bytes);
-        const page = pdf.getPages()[0];
-        const { width, height } = page.getSize();
-        const offset = Number(ySlider.value);
-        const font = await pdf.embedFont(StandardFonts.TimesRomanBold);
+    const { PDFDocument, StandardFonts, rgb } = PDFLib;
 
-        function drawElement(el, text) {
-            const fontSize = mm2pt(el.fontMM);
-            page.drawText(text, {
-                x: mm2pt(el.x),
-                y: height - mm2pt(el.y) - offset,
-                size: fontSize,
-                font,
-                color: rgb(0,0,0)
-            });
-        }
+    const pdf = await PDFDocument.load(bytes);
+    const page = pdf.getPages()[0];
+    const { width, height } = page.getSize();
+    const offset = Number(ySlider.value);
+    const font = await pdf.embedFont(StandardFonts.TimesRomanBold);
 
-        drawElement(elementSettingsMM.name, data.name);
-        drawElement(elementSettingsMM.trainer, `المدرب: ${data.trainer}`);
-        drawElement(elementSettingsMM.hours, `عدد الساعات: ${data.hours}`);
-        drawElement(elementSettingsMM.date, `التاريخ: ${data.date}`);
-        drawElement(elementSettingsMM.serial, `Serial: ${data.serial}`);
-
-        const out = await pdf.save();
-        const url = URL.createObjectURL(new Blob([out], { type: "application/pdf" }));
-
-        const div = document.createElement("div");
-        div.innerHTML = `👤 ${data.name} | 
-            <a href="${url}" target="_blank">معاينة</a> | 
-            <a href="${url}" download="شهادة_${data.name}.pdf">تحميل</a>`;
-        result.appendChild(div);
-
-    } catch(e) {
-        console.error("خطأ في إنشاء PDF:", e);
-        alert("حدث خطأ أثناء إنشاء المعاينة. تأكد من ملفات PDF وExcel.");
+    function drawElement(el, text) {
+        const fontSize = mm2pt(el.fontMM);
+        page.drawText(text, {
+            x: mm2pt(el.x),
+            y: height - mm2pt(el.y) - offset,
+            size: fontSize,
+            font,
+            color: rgb(0,0,0)
+        });
     }
+
+    drawElement(elementSettingsMM.name, data.name);
+    drawElement(elementSettingsMM.trainer, `المدرب: ${data.trainer}`);
+    drawElement(elementSettingsMM.hours, `عدد الساعات: ${data.hours}`);
+    drawElement(elementSettingsMM.date, `التاريخ: ${data.date}`);
+    drawElement(elementSettingsMM.serial, `Serial: ${data.serial}`);
+
+    return await pdf.save();
 }
 </script>
 
