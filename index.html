@@ -3,122 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إصدار الشهادات الاحترافي</title>
+    <title>تعديل ملفات PDF تلقائياً</title>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        :root { --primary: #2c3e50; --success: #27ae60; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; text-align: center; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .upload-section { border: 2px dashed #bdc3c7; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-        input[type="file"] { margin: 10px 0; }
-        .btn { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; transition: 0.3s; width: 100%; }
-        .btn:hover { opacity: 0.9; }
-        #status { margin-top: 20px; font-weight: bold; color: var(--primary); }
-        .download-link { display: block; margin-top: 10px; color: var(--success); text-decoration: none; font-weight: bold; border: 1px solid var(--success); padding: 10px; border-radius: 5px; }
+        :root { --primary: #2c3e50; --accent: #e74c3c; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f6; padding: 20px; text-align: center; }
+        .container { max-width: 700px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .upload-section { border: 2px dashed #3498db; padding: 20px; border-radius: 10px; margin-bottom: 20px; background: #ebf5fb; }
+        input[type="file"] { margin: 10px 0; width: 100%; }
+        .btn { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 18px; width: 100%; transition: 0.3s; }
+        .btn:hover { background: #34495e; }
+        #status { margin-top: 15px; font-weight: bold; color: #2980b9; }
+        .preview-list { margin-top: 20px; text-align: right; }
+        .download-item { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 10px; border: 1px solid #ddd; margin-bottom: 5px; border-radius: 5px; }
+        .download-link { background: #27ae60; color: white; text-decoration: none; padding: 5px 15px; border-radius: 4px; font-size: 14px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>🎓 نظام توليد الشهادات (PDF)</h2>
-    <p>يرجى رفع قالب الشهادة كصورة (دقة عالية) وملف الأسماء</p>
+    <h2>📄 إصدار الشهادات بملف PDF الأصلي</h2>
+    <p>قم برفع قالب PDF وملف الأسماء، وسيتم الكتابة فوق الملف بدقة عالية.</p>
 
     <div class="upload-section">
-        <label>1. صورة القالب (High Res):</label><br>
-        <input type="file" id="bgInput" accept="image/*"><br><br>
+        <label>1. ملف القالب (PDF):</label>
+        <input type="file" id="pdfInput" accept=".pdf">
         
-        <label>2. ملف الإكسل (الأسماء):</label><br>
+        <label>2. ملف الأسماء (Excel):</label>
         <input type="file" id="excelInput" accept=".xlsx, .xls">
     </div>
 
-    <button class="btn" onclick="generatePDFs()">بدء إنشاء ملفات PDF</button>
+    <button class="btn" onclick="processPDFs()">توليد ملفات PDF والمعاينة</button>
     
     <div id="status"></div>
-    <div id="downloadArea"></div>
+    <div id="downloadArea" class="preview-list"></div>
 </div>
 
 <script>
-    async function generatePDFs() {
-        const { jsPDF } = window.jspdf;
-        const bgFile = document.getElementById('bgInput').files[0];
+    async function processPDFs() {
+        const pdfFile = document.getElementById('pdfInput').files[0];
         const excelFile = document.getElementById('excelInput').files[0];
         const status = document.getElementById('status');
         const downloadArea = document.getElementById('downloadArea');
 
-        if (!bgFile || !excelFile) {
-            alert("يرجى اختيار الملفات المطلوبة");
+        if (!pdfFile || !excelFile) {
+            alert("يرجى اختيار ملف PDF وملف الإكسل");
             return;
         }
 
-        status.innerText = "جاري المعالجة... يرجى الانتظار";
+        status.innerText = "جاري معالجة الملفات...";
         downloadArea.innerHTML = "";
 
-        // 1. معالجة الصورة
-        const bgBase64 = await toBase64(bgFile);
-        const img = new Image();
-        img.src = bgBase64;
+        // قراءة ملف الـ PDF كـ ArrayBuffer
+        const pdfBytes = await pdfFile.arrayBuffer();
 
-        img.onload = async function() {
-            // 2. معالجة الإكسل
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, {type: 'array'});
-                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1});
-                
-                const names = rows.slice(1, 4).map(r => r[0]); // أول 3 أسماء
+        // قراءة ملف الإكسل
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1});
+            
+            // سحب الأسماء (أول 3 أسماء بعد العنوان)
+            const names = rows.slice(1, 4).map(r => r[0]);
 
-                for (let name of names) {
-                    if (!name) continue;
-
-                    // إنشاء PDF لكل اسم بدقة عالية (A4 Landscape)
-                    const pdf = new jsPDF({
-                        orientation: 'landscape',
-                        unit: 'px',
-                        format: [img.width, img.height]
-                    });
-
-                    // إضافة صورة القالب
-                    pdf.addImage(bgBase64, 'PNG', 0, 0, img.width, img.height);
-
-                    // إعدادات الخط (مطابقة لشهادة عبدالفتاح صلاح)
-                    pdf.setTextColor(0, 0, 0);
-                    const fontSize = Math.floor(img.height * 0.05); 
-                    pdf.setFont("times", "bold"); 
-                    pdf.setFontSize(fontSize);
-
-                    // إضافة الاسم في المنتصف (إحداثيات 43% من الارتفاع)
-                    const text = name.toString().toUpperCase();
-                    const textWidth = pdf.getTextWidth(text);
-                    const x = (img.width - textWidth) / 2;
-                    const y = img.height * 0.43;
-
-                    pdf.text(text, x, y);
-
-                    // إنشاء رابط التحميل
-                    const blob = pdf.output('blob');
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `شهادة_${name}.pdf`;
-                    link.className = "download-link";
-                    link.innerText = `تحميل PDF: ${name}`;
-                    downloadArea.appendChild(link);
-                }
-                status.innerText = "تم إنشاء الملفات بنجاح!";
-            };
-            reader.readAsArrayBuffer(excelFile);
+            for (let name of names) {
+                if (!name) continue;
+                await createSinglePDF(pdfBytes, name.toString().toUpperCase());
+            }
+            status.innerText = "تمت المعالجة بنجاح! ✅";
         };
+        reader.readAsArrayBuffer(excelFile);
     }
 
-    function toBase64(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
+    async function createSinglePDF(existingPdfBytes, studentName) {
+        const { PDFDocument, rgb, StandardFonts } = PDFLib;
+
+        // تحميل ملف الـ PDF الأصلي
+        const pdfDoc = await PDFDocument.load(existingPdfBytes);
+        const pages = pdfDoc.getPages();
+        const firstPage = pages[0];
+        const { width, height } = firstPage.getSize();
+
+        // استخدام خط Times Roman Bold (متوفر قياسياً في المكتبة)
+        const font = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
+
+        // حساب حجم الخط والموقع بناءً على أبعاد ملف عبدالفتاح
+        const fontSize = height * 0.05; 
+        const textWidth = font.widthOfTextAtSize(studentName, fontSize);
+
+        // إحداثيات (المنتصف عرضياً، و43% من الارتفاع من الأسفل لأن نظام PDF يبدأ من الأسفل)
+        const x = (width - textWidth) / 2;
+        const y = height * 0.57; // 100% - 43% = 57% لضبط المكان بدقة
+
+        // الكتابة فوق الصفحة
+        firstPage.drawText(studentName, {
+            x: x,
+            y: y,
+            size: fontSize,
+            font: font,
+            color: rgb(0, 0, 0),
         });
+
+        // حفظ الملف
+        const modifiedPdfBytes = await pdfDoc.save();
+        
+        // إنشاء رابط تحميل ومعاينة
+        const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        
+        const item = document.createElement('div');
+        item.className = "download-item";
+        item.innerHTML = `
+            <span>${studentName}</span>
+            <div>
+                <a href="${url}" target="_blank" style="margin-left:10px; color:#3498db;">معاينة</a>
+                <a href="${url}" download="شهادة_${studentName}.pdf" class="download-link">تحميل PDF</a>
+            </div>
+        `;
+        document.getElementById('downloadArea').appendChild(item);
     }
 </script>
 
