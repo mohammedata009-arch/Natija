@@ -1,272 +1,209 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>نظام الشهادات الذكي 2026</title>
+    <meta charset="UTF-8">
+    <title>مستخرج إحداثيات PDF الذكي 2026</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-<style>
-body{
-font-family:Segoe UI;
-background:#f0f4f8;
-padding:20px;
-display:flex;
-flex-direction:column;
-align-items:center
-}
-.panel{
-background:#fff;
-padding:20px;
-border-radius:15px;
-box-shadow:0 4px 20px rgba(0,0,0,.1);
-max-width:750px;
-width:100%
-}
-.section{
-background:#f9fbff;
-padding:15px;
-border-radius:10px;
-border:1px solid #d6e4f0;
-margin-bottom:15px
-}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-label{font-weight:bold}
-input,select{
-width:100%;
-padding:10px;
-border-radius:8px;
-border:1px solid #bcccdc
-}
-button{
-padding:15px;
-background:#004494;
-color:#fff;
-border:none;
-border-radius:8px;
-font-size:16px;
-cursor:pointer
-}
-button:hover{background:#003371}
-#log{text-align:center;margin:10px;font-weight:bold}
-.canvas-container{
-border:4px solid #004494;
-margin-top:15px;
-background:#fff;
-overflow:auto
-}
-#previewArea{
-display:grid;
-grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-gap:12px;
-margin-top:20px
-}
-.preview-box{
-background:#fff;
-padding:8px;
-border-radius:10px;
-box-shadow:0 3px 10px rgba(0,0,0,.1)
-}
-.preview-box img{
-width:100%;
-border-radius:8px
-}
-</style>
+    <style>
+        :root { --primary: #0056b3; --accent: #28a745; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f9; padding: 20px; text-align: center; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .upload-section { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .file-box { border: 2px dashed #ccc; padding: 15px; border-radius: 10px; transition: 0.3s; }
+        .file-box:hover { border-color: var(--primary); background: #f0f7ff; }
+        button { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 5px; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        #status { margin: 15px; font-weight: bold; color: var(--primary); }
+        canvas { max-width: 100%; border: 1px solid #ddd; margin-top: 10px; display: none; }
+        .detected-fields { margin-top: 15px; text-align: right; background: #eee; padding: 10px; border-radius: 8px; }
+    </style>
 </head>
-
 <body>
 
-<div class="panel">
-<h2 style="text-align:center">🎓 نظام الشهادات الذكي</h2>
+<div class="container">
+    <h2>🧠 نظام استنتاج إحداثيات PDF الذكي</h2>
+    <p>قم برفع النسخة الفارغة والنسخة المعبأة ليقوم النظام بتحديد أماكن البيانات تلقائياً.</p>
 
-<div class="section">
-<label>القالب والتوقيع</label>
-<div class="grid">
-<input type="file" id="bgInput" accept="image/*">
-<input type="file" id="signInput" accept="image/*">
-</div>
-</div>
+    <div class="upload-section">
+        <div class="file-box">
+            <label>1. PDF فارغ (القالب)</label>
+            <input type="file" id="pdfEmpty" accept=".pdf">
+        </div>
+        <div class="file-box">
+            <label>2. PDF مليء (للمقارنة)</label>
+            <input type="file" id="pdfFull" accept=".pdf">
+        </div>
+    </div>
 
-<div class="section">
-<label>ملف Excel</label>
-<input type="file" id="excelInput" accept=".xls,.xlsx">
-</div>
+    <div class="file-box" style="margin-bottom: 20px;">
+        <label>3. ملف Excel (البيانات الجديدة)</label>
+        <input type="file" id="excelInput" accept=".xlsx, .xls">
+    </div>
 
-<div class="section">
-<label>إعدادات الكتابة</label>
-<div class="grid">
-<select id="currentTool">
-<option value="trainee">اسم المتدرب (إجباري)</option>
-<option value="trainer">اسم المدرب</option>
-<option value="course">اسم البرنامج</option>
-<option value="date">التاريخ</option>
-<option value="serial">الرقم التسلسلي</option>
-<option value="signature">التوقيع</option>
-</select>
-<input type="number" id="fSize" value="50">
-</div>
-<input type="color" id="fColor" value="#002d72">
-</div>
+    <button id="analyzeBtn" onclick="analyzePDFs()">تحليل الفروقات واكتشاف الحقول 🔍</button>
+    <button id="generateBtn" onclick="generateNewPDFs()" disabled>إصدار الملفات الجديدة 📄</button>
 
-<div id="log">جاهز للعمل…</div>
-<button onclick="generateCertificates()">إصدار الشهادات 👀</button>
-</div>
+    <div id="status">جاهز للاستخدام...</div>
 
-<div class="canvas-container">
-<canvas id="mainCanvas"></canvas>
+    <div id="results" style="display:none;">
+        <h3>المناطق المكتشفة (ترتيب الإدخال):</h3>
+        <div id="fieldsList" class="detected-fields"></div>
+        <canvas id="diffCanvas"></canvas>
+    </div>
 </div>
-
-<h3 style="margin-top:25px">📸 معاينة الشهادات</h3>
-<div id="previewArea"></div>
 
 <script>
-const canvas=document.getElementById("mainCanvas");
-const ctx=canvas.getContext("2d");
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
-let bgImg=new Image();
-let signImg=new Image();
-let excelData=[];
-let locations={};
+    let detectedLocations = [];
+    let excelData = [];
+    let originalPdfBytes;
 
-function log(msg,ok=false){
-const l=document.getElementById("log");
-l.style.color=ok?"green":"#d32f2f";
-l.innerText=msg;
-}
+    async function analyzePDFs() {
+        const emptyFile = document.getElementById('pdfEmpty').files[0];
+        const fullFile = document.getElementById('pdfFull').files[0];
+        
+        if (!emptyFile || !fullFile) return alert("الرجاء رفع الملفين معاً!");
 
-/* تحميل الصور */
-function loadImage(input,img,isBg){
-if(!input.files[0])return;
-const r=new FileReader();
-r.onload=e=>{
-img.onload=()=>{
-if(isBg){
-canvas.width=img.width;
-canvas.height=img.height;
-drawPreview();
-log("✅ تم تحميل القالب",true);
-}
-}
-img.src=e.target.result;
-}
-r.readAsDataURL(input.files[0]);
-}
+        updateStatus("⏳ جاري تحليل البكسلات... قد يستغرق ذلك ثواني");
 
-bgInput.onchange=()=>loadImage(bgInput,bgImg,true);
-signInput.onchange=()=>loadImage(signInput,signImg,false);
+        // تحويل الصفحات لصور
+        const canvasE = await pdfToCanvas(emptyFile);
+        const canvasF = await pdfToCanvas(fullFile);
+        
+        const ctxE = canvasE.getContext('2d');
+        const ctxF = canvasF.getContext('2d');
+        const width = canvasE.width;
+        const height = canvasE.height;
 
-/* قراءة Excel */
-excelInput.onchange=e=>{
-const r=new FileReader();
-r.onload=ev=>{
-const wb=XLSX.read(new Uint8Array(ev.target.result),{type:"array"});
-const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1});
-excelData=rows.slice(1).filter(r=>r[0]).map(r=>({
-trainee:r[0],
-trainer:r[1]||"",
-course:r[2]||"",
-date:r[3]||""
-}));
-log(`✅ تم تحميل ${excelData.length} اسم`,true);
-}
-r.readAsArrayBuffer(e.target.files[0]);
-};
+        const imgE = ctxE.getImageData(0, 0, width, height).data;
+        const imgF = ctxF.getImageData(0, 0, width, height).data;
 
-/* تحديد المواقع */
-canvas.addEventListener("mousedown",e=>{
-if(!bgImg.src){log("❌ حمّل القالب أولاً");return;}
-const rect=canvas.getBoundingClientRect();
-const tool=currentTool.value;
-locations[tool]={
-x:(e.clientX-rect.left)*(canvas.width/rect.width),
-y:(e.clientY-rect.top)*(canvas.height/rect.height),
-size:+fSize.value,
-color:fColor.value
-};
-drawPreview();
-log("📍 تم تحديد الموضع",true);
-});
+        let diffPoints = [];
+        for (let i = 0; i < imgF.length; i += 4) {
+            // طرح البكسلات (إذا كان المليء أغمق من الفارغ بفرق ملحوظ)
+            if (imgE[i] - imgF[i] > 60) {
+                const pixelIdx = i / 4;
+                diffPoints.push({ x: pixelIdx % width, y: Math.floor(pixelIdx / width) });
+            }
+        }
 
-/* معاينة */
-function drawPreview(){
-ctx.clearRect(0,0,canvas.width,canvas.height);
-ctx.drawImage(bgImg,0,0);
-ctx.fillStyle="rgba(255,0,0,.7)";
-Object.values(locations).forEach(l=>{
-ctx.beginPath();
-ctx.arc(l.x,l.y,8,0,Math.PI*2);
-ctx.fill();
-});
-}
+        // تجميع النقاط إلى حقول
+        detectedLocations = clusterPoints(diffPoints);
+        
+        // عرض النتائج للمستخدم
+        showPreview(canvasE, detectedLocations);
+        updateStatus(`✅ اكتمل التحليل! تم العثور على ${detectedLocations.length} حقل إدخال.`, true);
+        document.getElementById('generateBtn').disabled = false;
+        
+        // حفظ ملف الـ PDF الأصلي لاستخدامه لاحقاً
+        originalPdfBytes = await emptyFile.arrayBuffer();
+    }
 
-/* تحقق ذكي */
-function validate(){
-if(!bgImg.src) return "❌ لم يتم رفع القالب";
-if(excelData.length===0) return "❌ لم يتم رفع Excel";
-if(!locations.trainee) return "❌ حدد مكان اسم المتدرب";
-return null;
-}
+    async function pdfToCanvas(file) {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+        const page = await pdf.getPage(1);
+        const viewport = page.getViewport({ scale: 1.5 });
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        await page.render({ canvasContext: context, viewport: viewport }).promise;
+        return canvas;
+    }
 
-/* توليد + معاينة */
-async function generateCertificates(){
-const err=validate();
-if(err){log(err);return;}
+    function clusterPoints(points) {
+        let clusters = [];
+        points.forEach(p => {
+            let found = clusters.find(c => Math.abs(c.x - p.x) < 60 && Math.abs(c.y - p.y) < 25);
+            if (!found) clusters.push({ x: p.x, y: p.y });
+        });
+        // الترتيب: من الأعلى للأسفل، ثم من اليمين لليسار (للغة العربية)
+        return clusters.sort((a, b) => (Math.abs(a.y - b.y) > 10 ? a.y - b.y : b.x - a.x));
+    }
 
-previewArea.innerHTML="";
-const {jsPDF}=window.jspdf;
+    function showPreview(canvas, locations) {
+        const resDiv = document.getElementById('results');
+        const listDiv = document.getElementById('fieldsList');
+        const dCanvas = document.getElementById('diffCanvas');
+        resDiv.style.display = 'block';
+        dCanvas.style.display = 'block';
+        
+        dCanvas.width = canvas.width;
+        dCanvas.height = canvas.height;
+        const ctx = dCanvas.getContext('2d');
+        ctx.drawImage(canvas, 0, 0);
+        
+        listDiv.innerHTML = "";
+        locations.forEach((loc, i) => {
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 3;
+            ctx.strokeRect(loc.x - 50, loc.y - 15, 100, 30);
+            ctx.fillStyle = "red";
+            ctx.fillText(i + 1, loc.x, loc.y - 20);
+            listDiv.innerHTML += `📍 حقل ${i+1}: مرتبط بعمود إكسل رقم ${i+1}<br>`;
+        });
+    }
 
-excelData.forEach((row,i)=>{
-ctx.clearRect(0,0,canvas.width,canvas.height);
-ctx.drawImage(bgImg,0,0);
+    // استيراد الإكسل
+    excelInput.onchange = e => {
+        const reader = new FileReader();
+        reader.onload = ev => {
+            const wb = XLSX.read(new Uint8Array(ev.target.result), {type: "array"});
+            excelData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1}).slice(1);
+            updateStatus(`📊 تم تحميل ${excelData.length} سجل من الإكسل`);
+        };
+        reader.readAsArrayBuffer(e.target.files[0]);
+    };
 
-const data={
-trainee:row.trainee,
-trainer:row.trainer,
-course:row.course,
-date:row.date,
-serial:String(i+1).padStart(3,"0")
-};
+    async function generateNewPDFs() {
+        if (!excelData.length) return alert("ارفع ملف الإكسل أولاً!");
+        updateStatus("⏳ جاري إنشاء ملفات PDF...");
 
-Object.entries(locations).forEach(([k,l])=>{
-if(k==="signature" && signImg.src){
-const w=canvas.width*.15;
-const h=w*(signImg.height/signImg.width);
-ctx.drawImage(signImg,l.x-w/2,l.y-h/2,w,h);
-}else if(data[k]){
-ctx.fillStyle=l.color;
-ctx.font=`bold ${l.size}px Arial`;
-ctx.textAlign="center";
-ctx.fillText(data[k],l.x,l.y);
-}
-});
+        const { PDFDocument, rgb } = PDFLib;
 
-const img=new Image();
-img.src=canvas.toDataURL("image/jpeg",0.9);
+        for (let row of excelData) {
+            const pdfDoc = await PDFDocument.load(originalPdfBytes);
+            const page = pdfDoc.getPages()[0];
+            const { width, height } = page.getSize();
+            const canvasW = document.getElementById('diffCanvas').width;
+            const canvasH = document.getElementById('diffCanvas').height;
 
-const btn=document.createElement("button");
-btn.innerText="تحميل PDF";
-btn.onclick=()=>{
-const pdf=new jsPDF({
-orientation:canvas.width>canvas.height?"l":"p",
-unit:"px",
-format:[canvas.width,canvas.height]
-});
-pdf.addImage(img.src,"JPEG",0,0);
-pdf.save(`شهادة_${row.trainee}.pdf`);
-};
+            detectedLocations.forEach((loc, i) => {
+                if (row[i]) {
+                    // تحويل إحداثيات الكانفاس إلى إحداثيات PDF
+                    const pdfX = (loc.x / canvasW) * width;
+                    const pdfY = height - ((loc.y / canvasH) * height); // PDF يبدأ من الأسفل
 
-const box=document.createElement("div");
-box.className="preview-box";
-box.appendChild(img);
-box.appendChild(btn);
+                    page.drawText(String(row[i]), {
+                        x: pdfX - 30, // إزاحة بسيطة للتوسيط
+                        y: pdfY,
+                        size: 14,
+                        color: rgb(0, 0, 0.5)
+                    });
+                }
+            });
 
-previewArea.appendChild(box);
-});
+            const pdfBytes = await pdfDoc.save();
+            const blob = new Blob([pdfBytes], { type: "application/pdf" });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Document_${row[0]}.pdf`;
+            link.click();
+        }
+        updateStatus("✅ تمت العملية بنجاح!", true);
+    }
 
-log("👀 تمت المعاينة – يمكنك التحميل الآن",true);
-}
+    function updateStatus(msg, isOk = false) {
+        const s = document.getElementById('status');
+        s.innerText = msg;
+        s.style.color = isOk ? "green" : "var(--primary)";
+    }
 </script>
-
 </body>
 </html>
+
