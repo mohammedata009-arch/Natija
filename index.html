@@ -3,126 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تعديل ملفات PDF تلقائياً</title>
+    <title>نظام الشهادات الذكي</title>
     <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root { --primary: #2c3e50; --accent: #e74c3c; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f6; padding: 20px; text-align: center; }
-        .container { max-width: 700px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
-        .upload-section { border: 2px dashed #3498db; padding: 20px; border-radius: 10px; margin-bottom: 20px; background: #ebf5fb; }
-        input[type="file"] { margin: 10px 0; width: 100%; }
-        .btn { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 18px; width: 100%; transition: 0.3s; }
-        .btn:hover { background: #34495e; }
-        #status { margin-top: 15px; font-weight: bold; color: #2980b9; }
-        .preview-list { margin-top: 20px; text-align: right; }
-        .download-item { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 10px; border: 1px solid #ddd; margin-bottom: 5px; border-radius: 5px; }
-        .download-link { background: #27ae60; color: white; text-decoration: none; padding: 5px 15px; border-radius: 4px; font-size: 14px; }
+        :root {
+            --main-color: #d35400;
+            --secondary-color: #e67e22;
+            --bg-color: #f8f9fa;
+        }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg-color); margin: 0; padding: 20px; text-align: center; }
+        .card { max-width: 600px; margin: auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+        
+        h2 { color: var(--main-color); margin-bottom: 30px; }
+
+        /* منطقة الرفع بتصميم عصري */
+        .upload-area { border: 2px dashed #ddd; padding: 25px; margin-bottom: 25px; border-radius: 15px; background: #fffcf9; transition: all 0.3s; }
+        .upload-area:hover { border-color: var(--main-color); background: #fff5eb; }
+        input[type="file"] { margin: 10px 0; font-size: 14px; }
+
+        /* الأزرار التفاعلية */
+        .btn-glow {
+            background: linear-gradient(45deg, var(--main-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 18px 30px;
+            width: 100%;
+            border-radius: 50px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 15px rgba(211, 84, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-glow:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 20px rgba(211, 84, 0, 0.4);
+            filter: brightness(1.1);
+        }
+        .btn-glow:active { transform: translateY(1px); }
+
+        /* قائمة النتائج التفاعلية */
+        #resultArea { margin-top: 30px; text-align: right; }
+        .item-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border-right: 5px solid var(--main-color);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            animation: fadeIn 0.5s ease forwards;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .action-btns { display: flex; gap: 10px; }
+        .sub-btn {
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .preview-btn { border: 1px solid var(--main-color); color: var(--main-color); }
+        .preview-btn:hover { background: var(--main-color); color: #fff; }
+        
+        .download-btn { background: #27ae60; color: white; }
+        .download-btn:hover { background: #219150; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3); }
+
+        .loader { display: none; margin: 20px auto; border: 4px solid #f3f3f3; border-top: 4px solid var(--main-color); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>📄 إصدار الشهادات بملف PDF الأصلي</h2>
-    <p>قم برفع قالب PDF وملف الأسماء، وسيتم الكتابة فوق الملف بدقة عالية.</p>
-
-    <div class="upload-section">
-        <label>1. ملف القالب (PDF):</label>
+<div class="card">
+    <h2>✨ صانع الشهادات السحري</h2>
+    
+    <div class="upload-area">
+        <label>📥 ارفع قالب الشهادة (PDF):</label><br>
         <input type="file" id="pdfInput" accept=".pdf">
-        
-        <label>2. ملف الأسماء (Excel):</label>
+        <br><br>
+        <label>📊 ارفع ملف الأسماء (Excel):</label><br>
         <input type="file" id="excelInput" accept=".xlsx, .xls">
     </div>
 
-    <button class="btn" onclick="processPDFs()">توليد ملفات PDF والمعاينة</button>
-    
-    <div id="status"></div>
-    <div id="downloadArea" class="preview-list"></div>
+    <button class="btn-glow" onclick="process()">
+        <span>🚀</span> ابدأ الإصدار الآن
+    </button>
+
+    <div id="loader" class="loader"></div>
+    <div id="resultArea"></div>
 </div>
 
 <script>
-    async function processPDFs() {
+    async function process() {
         const pdfFile = document.getElementById('pdfInput').files[0];
         const excelFile = document.getElementById('excelInput').files[0];
-        const status = document.getElementById('status');
-        const downloadArea = document.getElementById('downloadArea');
+        if (!pdfFile || !excelFile) return alert("يرجى اختيار الملفات أولاً!");
 
-        if (!pdfFile || !excelFile) {
-            alert("يرجى اختيار ملف PDF وملف الإكسل");
-            return;
-        }
+        document.getElementById('loader').style.display = 'block';
+        document.getElementById('resultArea').innerHTML = "";
 
-        status.innerText = "جاري معالجة الملفات...";
-        downloadArea.innerHTML = "";
-
-        // قراءة ملف الـ PDF كـ ArrayBuffer
         const pdfBytes = await pdfFile.arrayBuffer();
-
-        // قراءة ملف الإكسل
         const reader = new FileReader();
+
         reader.onload = async function(e) {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, {type: 'array'});
             const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1});
             
-            // سحب الأسماء (أول 3 أسماء بعد العنوان)
+            // سحب الأسماء وتجاوز العنوان
             const names = rows.slice(1, 4).map(r => r[0]);
 
             for (let name of names) {
-                if (!name) continue;
-                await createSinglePDF(pdfBytes, name.toString().toUpperCase());
+                if (name) await createPDF(pdfBytes, name.toString().toUpperCase());
             }
-            status.innerText = "تمت المعالجة بنجاح! ✅";
+            document.getElementById('loader').style.display = 'none';
         };
         reader.readAsArrayBuffer(excelFile);
     }
 
-    async function createSinglePDF(existingPdfBytes, studentName) {
+    async function createPDF(baseBytes, name) {
         const { PDFDocument, rgb, StandardFonts } = PDFLib;
-
-        // تحميل ملف الـ PDF الأصلي
-        const pdfDoc = await PDFDocument.load(existingPdfBytes);
-        const pages = pdfDoc.getPages();
-        const firstPage = pages[0];
-        const { width, height } = firstPage.getSize();
-
-        // استخدام خط Times Roman Bold (متوفر قياسياً في المكتبة)
+        const pdfDoc = await PDFDocument.load(baseBytes);
+        const page = pdfDoc.getPages()[0];
+        const { width, height } = page.getSize();
         const font = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
 
-        // حساب حجم الخط والموقع بناءً على أبعاد ملف عبدالفتاح
-        const fontSize = height * 0.05; 
-        const textWidth = font.widthOfTextAtSize(studentName, fontSize);
+        const fontSize = height * 0.048;
+        const textWidth = font.widthOfTextAtSize(name, fontSize);
 
-        // إحداثيات (المنتصف عرضياً، و43% من الارتفاع من الأسفل لأن نظام PDF يبدأ من الأسفل)
-        const x = (width - textWidth) / 2;
-        const y = height * 0.57; // 100% - 43% = 57% لضبط المكان بدقة
+        [span_0](start_span)// اللون النحاسي البرتقالي المطابق للأصل[span_0](end_span)
+        const copperColor = rgb(0.44, 0.24, 0.07); 
 
-        // الكتابة فوق الصفحة
-        firstPage.drawText(studentName, {
-            x: x,
-            y: y,
+        page.drawText(name, {
+            x: (width - textWidth) / 2,
+            [span_1](start_span)y: height * 0.53, // الموقع الصحيح لمنع التداخل[span_1](end_span)
             size: fontSize,
             font: font,
-            color: rgb(0, 0, 0),
+            color: copperColor,
         });
 
-        // حفظ الملف
-        const modifiedPdfBytes = await pdfDoc.save();
+        const modifiedBytes = await pdfDoc.save();
+        const url = URL.createObjectURL(new Blob([modifiedBytes], { type: 'application/pdf' }));
         
-        // إنشاء رابط تحميل ومعاينة
-        const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        
-        const item = document.createElement('div');
-        item.className = "download-item";
-        item.innerHTML = `
-            <span>${studentName}</span>
-            <div>
-                <a href="${url}" target="_blank" style="margin-left:10px; color:#3498db;">معاينة</a>
-                <a href="${url}" download="شهادة_${studentName}.pdf" class="download-link">تحميل PDF</a>
-            </div>
-        `;
-        document.getElementById('downloadArea').appendChild(item);
+        addResultItem(name, url);
+    }
+
+    function addResultItem(name, url) {
+        const div = document.createElement('div');
+        div.className = "item-card";
+        div.innerHTML = `
+            <span><strong>👤 ${name}</strong></span>
+            <div class="action-btns">
+                <a href="${url}" target="_blank" class="sub-btn preview-btn">👁️ معاينة</a>
+                <a href="${url}" download="${name}.pdf" class="sub-btn download-btn">📥 تحميل</a>
+            </div>`;
+        document.getElementById('resultArea').appendChild(div);
     }
 </script>
 
