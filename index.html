@@ -3,153 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إصدار الشهادات المتكامل</title>
+    <title>نظام الشهادات الذكي - إصدار 2026</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
-        .controls { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin-bottom: 20px; }
-        input, select { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        button { padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
-        .btn-main { background: #002d72; color: white; grid-column: span 2; }
-        .instruction { background: #fff3cd; padding: 10px; border-radius: 8px; font-size: 13px; margin: 10px 0; border: 1px solid #ffeeba; }
-        .editor-container { position: relative; border: 2px solid #002d72; background: white; max-width: 100%; overflow: auto; display: none; }
-        canvas { cursor: crosshair; }
+        .panel { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 700px; margin-bottom: 15px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        input, select { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        .tool-box { background: #e3f2fd; padding: 15px; border-radius: 10px; margin: 10px 0; border: 1px solid #90caf9; }
+        button { width: 100%; padding: 12px; background: #002d72; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .canvas-wrapper { position: relative; border: 2px solid #002d72; background: white; max-width: 100%; overflow: auto; }
+        #status { font-weight: bold; color: #2e7d32; margin: 10px 0; text-align: center; }
+        .label-sm { font-size: 12px; font-weight: bold; color: #555; display: block; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-<div class="controls">
-    <h2>🎓 نظام الشهادات الاحترافي</h2>
+<div class="panel">
+    <h3>🎓 نظام المعالجة الذكي (100 شهادة)</h3>
     
-    <label>1. ارفع قالب الشهادة:</label>
-    <input type="file" id="bgInput" accept="image/*">
-    
-    <label>2. ارفع صورة التوقيع (PNG شفافة):</label>
-    <input type="file" id="signInput" accept="image/*">
-
-    <hr>
-    <select id="activeField">
-        <option value="trainee">مكان اسم المتدرب</option>
-        <option value="trainer">مكان اسم المدرب</option>
-        <option value="course">مكان اسم الكورس</option>
-        <option value="date">مكان التاريخ</option>
-        <option value="serial">مكان الرقم التسلسلي</option>
-        <option value="signature">مكان التوقيع (الصورة)</option>
-    </select>
-
-    <input type="text" id="traineeVal" placeholder="اسم المتدرب">
-    <input type="text" id="trainerVal" placeholder="اسم المدرب">
-    <input type="text" id="courseVal" placeholder="اسم الكورس">
-    <input type="text" id="dateVal" placeholder="التاريخ">
-    <input type="text" id="serialVal" placeholder="الرقم التسلسلي">
-
-    <button class="btn-main" onclick="downloadPDF()">تحميل الشهادة النهائية PDF ✅</button>
-    
-    <div class="instruction">
-        <strong>طريقة العمل:</strong> اختر العنصر من القائمة (مثلاً: مكان اسم المتدرب) ثم اضغط على مكانه الصحيح في الشهادة بالأسفل.
+    <div class="grid">
+        <div>
+            <label class="label-sm">1. قالب الشهادة الأساسي:</label>
+            <input type="file" id="bgLoad" accept="image/*">
+        </div>
+        <div>
+            <label class="label-sm">2. ملف التوقيع (PNG شفاف):</label>
+            <input type="file" id="signLoad" accept="image/*">
+        </div>
     </div>
+
+    <label class="label-sm">3. ملف الاكسل (المتدرب، المدرب، البرنامج، التاريخ):</label>
+    <input type="file" id="excelLoad" accept=".xlsx, .xls">
+
+    <div class="tool-box">
+        <div class="grid">
+            <div>
+                <label class="label-sm">الأداة الحالية:</label>
+                <select id="tool">
+                    <option value="trainee">اسم المتدرب</option>
+                    <option value="trainer">اسم المدرب</option>
+                    <option value="course">اسم البرنامج</option>
+                    <option value="date">التاريخ</option>
+                    <option value="signature">التوقيع</option>
+                    <option value="serial">الرقم التسلسلي</option>
+                </select>
+            </div>
+            <div>
+                <label class="label-sm">حجم الخط (بكسل):</label>
+                <input type="number" id="fontSize" value="50">
+            </div>
+        </div>
+        <div class="grid">
+            <div>
+                <label class="label-sm">بداية الرقم التسلسلي:</label>
+                <input type="number" id="serialStart" value="1001">
+            </div>
+            <div>
+                <label class="label-sm">لون الخط:</label>
+                <input type="color" id="fontColor" value="#002d72">
+            </div>
+        </div>
+    </div>
+
+    <button onclick="processAll()" style="background: #c62828;">بدء استخراج الشهادات (تثبيت المواقع أولاً) 🚀</button>
+    <div id="status">جاهز للاستخدام..</div>
 </div>
 
-<div id="wrapper" class="editor-container">
-    <canvas id="canvas"></canvas>
+<div class="canvas-wrapper">
+    <canvas id="editor"></canvas>
 </div>
 
 <script>
-    const canvas = document.getElementById('canvas');
+    const canvas = document.getElementById('editor');
     const ctx = canvas.getContext('2d');
-    let bgImg = new Image();
-    let signImg = new Image();
+    let bg = new Image(), sign = new Image();
+    let excelData = [], locations = {};
+
+    // تحميل الصور
+    document.getElementById('bgLoad').onchange = e => loadFile(e, bg);
+    document.getElementById('signLoad').onchange = e => loadFile(e, sign);
     
-    // تخزين مواقع العناصر
-    let coords = {
-        trainee: {x:0, y:0}, trainer: {x:0, y:0}, course: {x:0, y:0},
-        date: {x:0, y:0}, serial: {x:0, y:0}, signature: {x:0, y:0}
-    };
-
-    document.getElementById('bgInput').onchange = (e) => {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            bgImg.onload = () => {
-                document.getElementById('wrapper').style.display = 'block';
-                canvas.width = bgImg.width;
-                canvas.height = bgImg.height;
-                draw();
-            };
-            bgImg.src = ev.target.result;
+    function loadFile(e, imgObj) {
+        const r = new FileReader();
+        r.onload = ev => { 
+            imgObj.onload = () => { if(imgObj === bg) { canvas.width = bg.width; canvas.height = bg.height; } render(); };
+            imgObj.src = ev.target.result; 
         };
-        reader.readAsDataURL(e.target.files[0]);
+        r.readAsDataURL(e.target.files[0]);
+    }
+
+    // قراءة الاكسل
+    document.getElementById('excelLoad').onchange = e => {
+        const r = new FileReader();
+        r.onload = ev => {
+            const data = new Uint8Array(ev.target.result);
+            const wb = XLSX.read(data, {type: 'array'});
+            excelData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]).slice(0, 100);
+            document.getElementById('status').innerText = `تم تحميل ${excelData.length} سطر.`;
+        };
+        r.readAsArrayBuffer(e.target.files[0]);
     };
 
-    document.getElementById('signInput').onchange = (e) => {
-        const reader = new FileReader();
-        reader.onload = (ev) => { signImg.src = ev.target.result; signImg.onload = draw; };
-        reader.readAsDataURL(e.target.files[0]);
-    };
-
-    canvas.addEventListener('mousedown', (e) => {
+    // تحديد المواقع بنقرة واحدة
+    canvas.addEventListener('mousedown', e => {
         const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const field = document.getElementById('activeField').value;
-        
-        coords[field].x = (e.clientX - rect.left) * scaleX;
-        coords[field].y = (e.clientY - rect.top) * scaleY;
-        draw();
+        const tool = document.getElementById('tool').value;
+        locations[tool] = {
+            x: (e.clientX - rect.left) * (canvas.width / rect.width),
+            y: (e.clientY - rect.top) * (canvas.height / rect.height),
+            size: document.getElementById('fontSize').value,
+            color: document.getElementById('fontColor').value
+        };
+        render();
     });
 
-    function draw() {
+    function render() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(bgImg, 0, 0);
-
-        const data = {
-            trainee: { val: document.getElementById('traineeVal').value, size: canvas.width/22, color: '#002d72' },
-            trainer: { val: document.getElementById('trainerVal').value, size: canvas.width/45, color: '#333' },
-            course: { val: document.getElementById('courseVal').value, size: canvas.width/30, color: '#002d72' },
-            date: { val: document.getElementById('dateVal').value, size: canvas.width/50, color: '#444' },
-            serial: { val: document.getElementById('serialVal').value, size: canvas.width/60, color: '#444' }
-        };
-
-        for (let key in data) {
-            if (coords[key].x !== 0) {
-                // مسح الخلفية تحت النص
-                ctx.fillStyle = "white"; 
-                ctx.fillRect(coords[key].x - (canvas.width*0.2), coords[key].y - (data[key].size), canvas.width*0.4, data[key].size * 1.5);
-                
-                // كتابة النص
-                ctx.fillStyle = data[key].color;
-                ctx.font = `bold ${data[key].size}px Arial`;
-                ctx.textAlign = "center";
-                ctx.fillText(data[key].val, coords[key].x, coords[key].y);
-            }
-        }
-
-        // رسم التوقيع كصورة
-        if (coords.signature.x !== 0 && signImg.src) {
-            const sW = canvas.width * 0.15;
-            const sH = (signImg.height / signImg.width) * sW;
-            ctx.drawImage(signImg, coords.signature.x - sW/2, coords.signature.y - sH/2, sW, sH);
+        if (bg.src) ctx.drawImage(bg, 0, 0);
+        for (let key in locations) {
+            ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
+            ctx.beginPath(); ctx.arc(locations[key].x, locations[key].y, 15, 0, Math.PI*2); ctx.fill();
         }
     }
 
-    // تحديث الرسم عند الكتابة
-    ['traineeVal', 'trainerVal', 'courseVal', 'dateVal', 'serialVal'].forEach(id => {
-        document.getElementById(id).oninput = draw;
-    });
-
-    async function downloadPDF() {
-        const imgData = canvas.toDataURL('image/jpeg', 1.0);
+    async function processAll() {
+        if (!bg.src || excelData.length === 0) return alert("ارفع القالب والاكسل أولاً!");
         const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF({
-            orientation: canvas.width > canvas.height ? 'l' : 'p',
-            unit: 'px',
-            format: [canvas.width, canvas.height]
-        });
-        pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
-        pdf.save(`شهادة_${document.getElementById('traineeVal').value}.pdf`);
+        let currentSerial = parseInt(document.getElementById('serialStart').value);
+
+        for (let i = 0; i < excelData.length; i++) {
+            document.getElementById('status').innerText = `جاري معالجة الشهادة ${i+1}...`;
+            const row = excelData[i];
+            ctx.drawImage(bg, 0, 0);
+
+            const map = {
+                trainee: row['المتدرب'] || row['Name'] || "",
+                trainer: row['المدرب'] || row['Trainer'] || "",
+                course: row['البرنامج'] || row['Course'] || "",
+                date: row['التاريخ'] || row['Date'] || "",
+                serial: (currentSerial + i).toString()
+            };
+
+            for (let key in locations) {
+                let loc = locations[key];
+                if (key === 'signature' && sign.src) {
+                    let sw = canvas.width * 0.15;
+                    ctx.drawImage(sign, loc.x - sw/2, loc.y - sw/2, sw, sw * (sign.height/sign.width));
+                } else if (map[key]) {
+                    ctx.fillStyle = "white"; // مسح الخلفية
+                    ctx.fillRect(loc.x - (canvas.width*0.2), loc.y - loc.size, canvas.width*0.4, loc.size * 1.5);
+                    ctx.fillStyle = loc.color;
+                    ctx.font = `bold ${loc.size}px Arial`;
+                    ctx.textAlign = "center";
+                    ctx.fillText(map[key], loc.x, loc.y);
+                }
+            }
+            
+            const pdf = new jsPDF({ orientation: canvas.width > canvas.height ? 'l' : 'p', unit: 'px', format: [canvas.width, canvas.height] });
+            pdf.addImage(canvas.toDataURL('image/jpeg', 0.8), 'JPEG', 0, 0, canvas.width, canvas.height);
+            pdf.save(`Certificate_${i+1}.pdf`);
+        }
+        document.getElementById('status').innerText = "تم الانتهاء بنجاح! ✅";
     }
 </script>
-
 </body>
 </html>
 
