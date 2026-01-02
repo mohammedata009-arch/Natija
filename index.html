@@ -3,116 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مستخرج الشهادات الذكي - مطابقة تلقائية</title>
+    <title>نظام إصدار الشهادات المتكامل</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f4f8; display: flex; justify-content: center; padding: 20px; margin: 0; }
-        .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
-        h2 { color: #002d72; margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 14px; }
-        .config { background: #f9f9f9; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: right; border: 1px solid #eee; }
-        button { width: 100%; padding: 15px; background-color: #002d72; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        button:hover { background-color: #001a44; }
-        #status { margin-top: 15px; font-weight: bold; color: #27ae60; }
-        canvas { display: none; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        .controls { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin-bottom: 20px; }
+        input, select { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        button { padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
+        .btn-main { background: #002d72; color: white; grid-column: span 2; }
+        .instruction { background: #fff3cd; padding: 10px; border-radius: 8px; font-size: 13px; margin: 10px 0; border: 1px solid #ffeeba; }
+        .editor-container { position: relative; border: 2px solid #002d72; background: white; max-width: 100%; overflow: auto; display: none; }
+        canvas { cursor: crosshair; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>🎓 معالج الشهادات الذكي</h2>
+<div class="controls">
+    <h2>🎓 نظام الشهادات الاحترافي</h2>
     
-    <div class="config">
-        <label>1. ارفع القالب (صورة أو PDF):</label>
-        <input type="file" id="fileInput" accept="image/*,.pdf">
+    <label>1. ارفع قالب الشهادة:</label>
+    <input type="file" id="bgInput" accept="image/*">
+    
+    <label>2. ارفع صورة التوقيع (PNG شفافة):</label>
+    <input type="file" id="signInput" accept="image/*">
+
+    <hr>
+    <select id="activeField">
+        <option value="trainee">مكان اسم المتدرب</option>
+        <option value="trainer">مكان اسم المدرب</option>
+        <option value="course">مكان اسم الكورس</option>
+        <option value="date">مكان التاريخ</option>
+        <option value="serial">مكان الرقم التسلسلي</option>
+        <option value="signature">مكان التوقيع (الصورة)</option>
+    </select>
+
+    <input type="text" id="traineeVal" placeholder="اسم المتدرب">
+    <input type="text" id="trainerVal" placeholder="اسم المدرب">
+    <input type="text" id="courseVal" placeholder="اسم الكورس">
+    <input type="text" id="dateVal" placeholder="التاريخ">
+    <input type="text" id="serialVal" placeholder="الرقم التسلسلي">
+
+    <button class="btn-main" onclick="downloadPDF()">تحميل الشهادة النهائية PDF ✅</button>
+    
+    <div class="instruction">
+        <strong>طريقة العمل:</strong> اختر العنصر من القائمة (مثلاً: مكان اسم المتدرب) ثم اضغط على مكانه الصحيح في الشهادة بالأسفل.
     </div>
+</div>
 
-    <input type="text" id="traineeName" placeholder="اسم المتدرب الجديد">
-    <input type="text" id="trainerName" placeholder="اسم المدرب (اختياري)">
-    <input type="text" id="certDate" placeholder="التاريخ">
-
-    <button onclick="process()">استخراج مطابق للخلفية ✅</button>
-    <div id="status"></div>
+<div id="wrapper" class="editor-container">
     <canvas id="canvas"></canvas>
 </div>
 
 <script>
-    async function process() {
-        const fileInput = document.getElementById('fileInput');
-        const trainee = document.getElementById('traineeName').value;
-        const trainer = document.getElementById('trainerName').value;
-        const date = document.getElementById('certDate').value;
-        const status = document.getElementById('status');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let bgImg = new Image();
+    let signImg = new Image();
+    
+    // تخزين مواقع العناصر
+    let coords = {
+        trainee: {x:0, y:0}, trainer: {x:0, y:0}, course: {x:0, y:0},
+        date: {x:0, y:0}, serial: {x:0, y:0}, signature: {x:0, y:0}
+    };
+
+    document.getElementById('bgInput').onchange = (e) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            bgImg.onload = () => {
+                document.getElementById('wrapper').style.display = 'block';
+                canvas.width = bgImg.width;
+                canvas.height = bgImg.height;
+                draw();
+            };
+            bgImg.src = ev.target.result;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    };
+
+    document.getElementById('signInput').onchange = (e) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => { signImg.src = ev.target.result; signImg.onload = draw; };
+        reader.readAsDataURL(e.target.files[0]);
+    };
+
+    canvas.addEventListener('mousedown', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const field = document.getElementById('activeField').value;
         
-        if (!fileInput.files[0] || !trainee) {
-            alert("يرجى رفع الشهادة وإدخال اسم المتدرب");
-            return;
+        coords[field].x = (e.clientX - rect.left) * scaleX;
+        coords[field].y = (e.clientY - rect.top) * scaleY;
+        draw();
+    });
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(bgImg, 0, 0);
+
+        const data = {
+            trainee: { val: document.getElementById('traineeVal').value, size: canvas.width/22, color: '#002d72' },
+            trainer: { val: document.getElementById('trainerVal').value, size: canvas.width/45, color: '#333' },
+            course: { val: document.getElementById('courseVal').value, size: canvas.width/30, color: '#002d72' },
+            date: { val: document.getElementById('dateVal').value, size: canvas.width/50, color: '#444' },
+            serial: { val: document.getElementById('serialVal').value, size: canvas.width/60, color: '#444' }
+        };
+
+        for (let key in data) {
+            if (coords[key].x !== 0) {
+                // مسح الخلفية تحت النص
+                ctx.fillStyle = "white"; 
+                ctx.fillRect(coords[key].x - (canvas.width*0.2), coords[key].y - (data[key].size), canvas.width*0.4, data[key].size * 1.5);
+                
+                // كتابة النص
+                ctx.fillStyle = data[key].color;
+                ctx.font = `bold ${data[key].size}px Arial`;
+                ctx.textAlign = "center";
+                ctx.fillText(data[key].val, coords[key].x, coords[key].y);
+            }
         }
 
-        status.innerText = "جاري مطابقة النصوص مع الخلفية...";
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        const reader = new FileReader();
+        // رسم التوقيع كصورة
+        if (coords.signature.x !== 0 && signImg.src) {
+            const sW = canvas.width * 0.15;
+            const sH = (signImg.height / signImg.width) * sW;
+            ctx.drawImage(signImg, coords.signature.x - sW/2, coords.signature.y - sH/2, sW, sH);
+        }
+    }
 
-        reader.onload = function(e) {
-            const img = new Image();
-            img.onload = function() {
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0);
+    // تحديث الرسم عند الكتابة
+    ['traineeVal', 'trainerVal', 'courseVal', 'dateVal', 'serialVal'].forEach(id => {
+        document.getElementById(id).oninput = draw;
+    });
 
-                // --- ميزة مطابقة الخلفية ---
-                // نأخذ لوناً من بكسل قريب لضمان المسح المخفي
-                const pixelData = ctx.getImageData(canvas.width/2, canvas.height * 0.5, 1, 1).data;
-                const bgColor = `rgb(${pixelData[0]}, ${pixelData[1]}, ${pixelData[2]})`;
-                ctx.fillStyle = bgColor;
-
-                // 1. مسح وكتابة اسم المتدرب (المنتصف)
-                const tw = canvas.width * 0.5;
-                const th = canvas.height * 0.06;
-                ctx.fillRect(canvas.width/2 - tw/2, canvas.height * 0.54, tw, th);
-                
-                ctx.fillStyle = "#002d72"; // لون النص المطابق لشهادتك
-                ctx.textAlign = "center";
-                ctx.font = `bold ${img.width / 24}px Arial`;
-                ctx.fillText(trainee, canvas.width / 2, canvas.height * 0.58);
-
-                // 2. مسح وكتابة اسم المدرب (أسفل اليمين)
-                if (trainer) {
-                    ctx.fillStyle = bgColor;
-                    ctx.fillRect(canvas.width * 0.1, canvas.height * 0.78, canvas.width * 0.3, canvas.height * 0.04);
-                    ctx.fillStyle = "#333"; 
-                    ctx.font = `${img.width / 45}px Arial`;
-                    ctx.textAlign = "right";
-                    ctx.fillText(trainer, canvas.width * 0.35, canvas.height * 0.81);
-                }
-
-                // 3. مسح وكتابة التاريخ (أسفل اليسار)
-                if (date) {
-                    ctx.fillStyle = bgColor;
-                    ctx.fillRect(canvas.width * 0.6, canvas.height * 0.78, canvas.width * 0.3, canvas.height * 0.04);
-                    ctx.fillStyle = "#333";
-                    ctx.textAlign = "left";
-                    ctx.fillText(date, canvas.width * 0.65, canvas.height * 0.81);
-                }
-
-                // التصدير
-                const imgData = canvas.toDataURL('image/jpeg', 1.0);
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF({
-                    orientation: canvas.width > canvas.height ? 'l' : 'p',
-                    unit: 'px',
-                    format: [canvas.width, canvas.height]
-                });
-                pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
-                pdf.save(`شهادة_${trainee}.pdf`);
-                status.innerText = "تم التعديل بنجاح! ✅";
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(fileInput.files[0]);
+    async function downloadPDF() {
+        const imgData = canvas.toDataURL('image/jpeg', 1.0);
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({
+            orientation: canvas.width > canvas.height ? 'l' : 'p',
+            unit: 'px',
+            format: [canvas.width, canvas.height]
+        });
+        pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
+        pdf.save(`شهادة_${document.getElementById('traineeVal').value}.pdf`);
     }
 </script>
+
 </body>
 </html>
 
