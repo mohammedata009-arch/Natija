@@ -2,124 +2,186 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>مستخرج إحداثيات PDF بدقة عالية</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <title>نظام دمج القوالب والبيانات الذكي</title>
     <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: white; margin: 0; display: flex; flex-direction: column; height: 100vh; }
-        .toolbar { background: #2d2d2d; padding: 15px; display: flex; gap: 15px; align-items: center; border-bottom: 2px solid var(--primary); box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        .main-content { flex: 1; overflow: auto; display: flex; justify-content: center; background: #404040; padding: 20px; position: relative; }
-        canvas { border: 2px solid #fff; box-shadow: 0 0 20px rgba(0,0,0,0.8); cursor: crosshair; }
-        .sidebar { width: 300px; background: #2d2d2d; padding: 20px; border-right: 1px solid #444; overflow-y: auto; }
-        input[type="file"] { background: #444; padding: 5px; border-radius: 5px; color: white; }
-        .coord-card { background: #3d3d3d; padding: 10px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid #007bff; animation: slideIn 0.3s; }
-        button { background: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-        button:hover { background: #0056b3; }
-        @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f9; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        .sidebar { width: 320px; background: #fff; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; z-index: 10; }
+        .viewer { flex: 1; background: #525659; display: flex; justify-content: center; overflow: auto; padding: 40px; position: relative; }
+        canvas { box-shadow: 0 0 20px rgba(0,0,0,0.5); cursor: crosshair; background: white; }
+        .step { background: #eef2f7; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-right: 4px solid #1a73e8; }
+        h2 { font-size: 18px; color: #1a73e8; margin-top: 0; }
+        .coord-item { font-size: 12px; background: #fff; padding: 5px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px; }
+        button { width: 100%; padding: 12px; background: #1a73e8; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:disabled { background: #ccc; }
+        .tool-select { width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 5px; }
+        #status { font-weight: bold; color: green; margin-top: 10px; text-align: center; }
     </style>
 </head>
 <body>
 
-<div class="toolbar">
-    <strong>🛠️ استخراج إحداثيات PDF:</strong>
-    <input type="file" id="pdfUpload" accept=".pdf">
-    <span id="pageInfo">يرجى رفع ملف...</span>
-    <button onclick="clearCoords()">مسح الإحداثيات</button>
+<div class="sidebar">
+    <h2>🛠️ إعداد القالب والبيانات</h2>
+    
+    <div class="step">
+        <label>1. ارفع القالب الفارغ (PDF)</label>
+        <input type="file" id="pdfInput" accept=".pdf" style="width: 100%">
+    </div>
+
+    <div class="step">
+        <label>2. حدد العنصر ثم انقر على القالب</label>
+        <select id="currentTool" class="tool-select">
+            <option value="trainee">اسم المتدرب</option>
+            <option value="course">اسم البرنامج</option>
+            <option value="date">التاريخ</option>
+            <option value="serial">الرقم التسلسلي</option>
+            <option value="sign">التوقيع (صورة)</option>
+        </select>
+        <div id="coordsDisplay"></div>
+    </div>
+
+    <div class="step">
+        <label>3. ارفع ملف الإكسل (بيانات)</label>
+        <input type="file" id="excelInput" accept=".xlsx, .xls" style="width: 100%">
+    </div>
+
+    <div class="step">
+        <label>4. ارفع التوقيع (PNG شفاف)</label>
+        <input type="file" id="signInput" accept="image/png" style="width: 100%">
+    </div>
+
+    <button id="generateBtn" onclick="generateBatch()" disabled>إصدار كافة الشهادات (PDF)</button>
+    <div id="status"></div>
 </div>
 
-<div style="display: flex; flex: 1; overflow: hidden;">
-    <div class="sidebar">
-        <h3>📍 الإحداثيات المستخرجة</h3>
-        <p style="font-size: 12px; color: #aaa;">(هذه القيم جاهزة للاستخدام في برمجة PDF-Lib)</p>
-        <div id="coordsList"></div>
-    </div>
-    
-    <div class="main-content" id="container">
-        <canvas id="pdfCanvas"></canvas>
-    </div>
+<div class="viewer">
+    <canvas id="pdfCanvas"></canvas>
 </div>
 
 <script>
-    const pdfjsLib = window['pdfjs-dist/build/pdf'];
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-
-    let pdfDoc = null;
+    
+    let locations = {};
+    let excelData = [];
+    let pdfDocGlobal = null;
+    let templateBytes = null;
+    let signImgBytes = null;
     let originalViewport = null;
+
     const canvas = document.getElementById('pdfCanvas');
     const ctx = canvas.getContext('2d');
 
-    // 1. تحميل الـ PDF بجودة عالية
-    document.getElementById('pdfUpload').addEventListener('change', async (e) => {
+    // تحميل ومعاينة الـ PDF
+    document.getElementById('pdfInput').onchange = async (e) => {
         const file = e.target.files[0];
-        if (!file) return;
-
-        const arrayBuffer = await file.arrayBuffer();
-        pdfDoc = await pdfjsLib.getDocument(arrayBuffer).promise;
-        renderPage(1);
-    });
-
-    async function renderPage(num) {
-        const page = await pdfDoc.getPage(num);
+        templateBytes = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument(templateBytes.slice(0)).promise;
+        const page = await pdf.getPage(1);
+        originalViewport = page.getViewport({ scale: 1.0 });
+        const viewport = page.getViewport({ scale: 1.5 });
         
-        // استخدام Scale عالي (2.0) لضمان الجودة العالية جداً عند الرؤية
-        const viewport = page.getViewport({ scale: 2.0 });
-        originalViewport = page.getViewport({ scale: 1.0 }); // المقياس المرجعي للـ PDF
-
-        canvas.height = viewport.height;
         canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+        document.getElementById('status').innerText = "✅ تم تحميل القالب. حدد المواقع الآن.";
+    };
 
-        const renderContext = {
-            canvasContext: ctx,
-            viewport: viewport
-        };
-        await page.render(renderContext).promise;
-        document.getElementById('pageInfo').innerText = `الصفحة 1 من ${pdfDoc.numPages} | جودة عالية (200%)`;
-    }
-
-    // 2. التقاط الإحداثيات عند النقر
-    canvas.addEventListener('mousedown', function(e) {
-        if (!pdfDoc) return;
-
+    // تحديد المواقع بالنقر
+    canvas.onmousedown = (e) => {
+        if (!originalViewport) return;
         const rect = canvas.getBoundingClientRect();
-        
-        // حساب الموضع بالنسبة للكانفاس (بكسلات الشاشة)
         const xCanvas = (e.clientX - rect.left) * (canvas.width / rect.width);
         const yCanvas = (e.clientY - rect.top) * (canvas.height / rect.height);
 
-        // تحويل الموضع إلى إحداثيات PDF الحقيقية (Points)
-        // في PDF: نقطة الأصل (0,0) هي أسفل اليسار
+        // تحويل لإحداثيات PDF الحقيقية
         const pdfX = (xCanvas / canvas.width) * originalViewport.width;
         const pdfY = originalViewport.height - ((yCanvas / canvas.height) * originalViewport.height);
 
-        addCoordToList(pdfX.toFixed(2), pdfY.toFixed(2));
-        drawMarker(xCanvas, yCanvas);
-    });
+        const tool = document.getElementById('currentTool').value;
+        locations[tool] = { x: pdfX, y: pdfY };
+        
+        updateCoordsUI();
+        drawMarker(xCanvas, yCanvas, tool);
+    };
 
-    function addCoordToList(x, y) {
-        const list = document.getElementById('coordsList');
-        const div = document.createElement('div');
-        div.className = 'coord-card';
-        div.innerHTML = `
-            <strong>حقل ${list.children.length + 1}</strong><br>
-            X: <code>${x}</code> | Y: <code>${y}</code>
-        `;
-        list.prepend(div);
+    function updateCoordsUI() {
+        const disp = document.getElementById('coordsDisplay');
+        disp.innerHTML = Object.entries(locations).map(([k, v]) => 
+            `<div class="coord-item">📍 ${k}: X=${v.x.toFixed(1)}, Y=${v.y.toFixed(1)}</div>`
+        ).join('');
     }
 
-    function drawMarker(x, y) {
+    function drawMarker(x, y, label) {
+        ctx.fillStyle = 'red';
         ctx.beginPath();
-        ctx.arc(x, y, 8, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        ctx.fillText(label, x + 10, y);
     }
 
-    function clearCoords() {
-        document.getElementById('coordsList').innerHTML = '';
-        if (pdfDoc) renderPage(1);
+    // قراءة الإكسل
+    document.getElementById('excelInput').onchange = (e) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const data = new Uint8Array(ev.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            excelData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1}).slice(1);
+            document.getElementById('status').innerText = `📊 تم تحميل ${excelData.length} سجل.`;
+            document.getElementById('generateBtn').disabled = false;
+        };
+        reader.readAsArrayBuffer(e.target.files[0]);
+    };
+
+    document.getElementById('signInput').onchange = async (e) => {
+        signImgBytes = await e.target.files[0].arrayBuffer();
+    };
+
+    // توليد PDF مدمج
+    async function generateBatch() {
+        if (!locations.trainee) return alert("يرجى تحديد موقع اسم المتدرب على الأقل");
+        
+        document.getElementById('status').innerText = "⏳ جاري التوليد...";
+        const { PDFDocument, rgb } = PDFLib;
+        const mainPdf = await PDFDocument.create();
+        const templateDoc = await PDFDocument.load(templateBytes);
+        
+        let embeddedSign = null;
+        if (signImgBytes) embeddedSign = await mainPdf.embedPng(signImgBytes);
+
+        const limit = Math.min(excelData.length, 100);
+
+        for (let i = 0; i < limit; i++) {
+            const row = excelData[i];
+            const [copiedPage] = await mainPdf.copyPages(templateDoc, [0]);
+            const page = mainPdf.addPage(copiedPage);
+
+            // وضع البيانات حسب المواقع المحفوظة
+            if (locations.trainee && row[0]) 
+                page.drawText(String(row[0]), { x: locations.trainee.x, y: locations.trainee.y, size: 24 });
+            
+            if (locations.course && row[1]) 
+                page.drawText(String(row[1]), { x: locations.course.x, y: locations.course.y, size: 20 });
+            
+            if (locations.date && row[2]) 
+                page.drawText(String(row[2]), { x: locations.date.x, y: locations.date.y, size: 14 });
+
+            if (locations.serial && row[3]) 
+                page.drawText(String(row[3]), { x: locations.serial.x, y: locations.serial.y, size: 12 });
+
+            if (locations.sign && embeddedSign) 
+                page.drawImage(embeddedSign, { x: locations.sign.x, y: locations.sign.y, width: 100, height: 50 });
+        }
+
+        const pdfBytes = await mainPdf.save();
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = "الشهادات_المجمعة.pdf";
+        link.click();
+        document.getElementById('status').innerText = "✅ اكتمل التحميل!";
     }
 </script>
 
