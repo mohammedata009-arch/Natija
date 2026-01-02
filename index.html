@@ -1,176 +1,140 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام الشهادات الذكي</title>
-    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <style>
-        :root {
-            --main-color: #d35400;
-            --secondary-color: #e67e22;
-            --bg-color: #f8f9fa;
-        }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg-color); margin: 0; padding: 20px; text-align: center; }
-        .card { max-width: 600px; margin: auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
-        
-        h2 { color: var(--main-color); margin-bottom: 30px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام إصدار الشهادات الذكي</title>
 
-        /* منطقة الرفع بتصميم عصري */
-        .upload-area { border: 2px dashed #ddd; padding: 25px; margin-bottom: 25px; border-radius: 15px; background: #fffcf9; transition: all 0.3s; }
-        .upload-area:hover { border-color: var(--main-color); background: #fff5eb; }
-        input[type="file"] { margin: 10px 0; font-size: 14px; }
+<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-        /* الأزرار التفاعلية */
-        .btn-glow {
-            background: linear-gradient(45deg, var(--main-color), var(--secondary-color));
-            color: white;
-            border: none;
-            padding: 18px 30px;
-            width: 100%;
-            border-radius: 50px;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 15px rgba(211, 84, 0, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        .btn-glow:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 12px 20px rgba(211, 84, 0, 0.4);
-            filter: brightness(1.1);
-        }
-        .btn-glow:active { transform: translateY(1px); }
-
-        /* قائمة النتائج التفاعلية */
-        #resultArea { margin-top: 30px; text-align: right; }
-        .item-card {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #fff;
-            padding: 15px 20px;
-            border-radius: 12px;
-            margin-bottom: 12px;
-            border-right: 5px solid var(--main-color);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            animation: fadeIn 0.5s ease forwards;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .action-btns { display: flex; gap: 10px; }
-        .sub-btn {
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            transition: 0.2s;
-        }
-        .preview-btn { border: 1px solid var(--main-color); color: var(--main-color); }
-        .preview-btn:hover { background: var(--main-color); color: #fff; }
-        
-        .download-btn { background: #27ae60; color: white; }
-        .download-btn:hover { background: #219150; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3); }
-
-        .loader { display: none; margin: 20px auto; border: 4px solid #f3f3f3; border-top: 4px solid var(--main-color); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
+<style>
+body {
+    font-family: Tahoma, Arial;
+    background: #f4f6f8;
+    padding: 20px;
+    text-align: center;
+}
+.box {
+    max-width: 600px;
+    background: white;
+    margin: auto;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,.1);
+}
+input, button {
+    width: 100%;
+    margin: 10px 0;
+    padding: 12px;
+    font-size: 16px;
+}
+button {
+    background: #d35400;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+.result {
+    margin-top: 20px;
+    text-align: right;
+}
+.item {
+    background: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.item a {
+    text-decoration: none;
+    color: #27ae60;
+}
+</style>
 </head>
+
 <body>
 
-<div class="card">
-    <h2>✨ صانع الشهادات السحري</h2>
-    
-    <div class="upload-area">
-        <label>📥 ارفع قالب الشهادة (PDF):</label><br>
-        <input type="file" id="pdfInput" accept=".pdf">
-        <br><br>
-        <label>📊 ارفع ملف الأسماء (Excel):</label><br>
-        <input type="file" id="excelInput" accept=".xlsx, .xls">
-    </div>
+<div class="box">
+<h2>📄 إصدار الشهادات من Excel</h2>
 
-    <button class="btn-glow" onclick="process()">
-        <span>🚀</span> ابدأ الإصدار الآن
-    </button>
+<input type="file" id="pdfInput" accept=".pdf">
+<input type="file" id="excelInput" accept=".xlsx,.xls">
 
-    <div id="loader" class="loader"></div>
-    <div id="resultArea"></div>
+<button onclick="start()">🚀 إنشاء الشهادات</button>
+
+<div class="result" id="result"></div>
 </div>
 
 <script>
-    async function process() {
-        const pdfFile = document.getElementById('pdfInput').files[0];
-        const excelFile = document.getElementById('excelInput').files[0];
-        if (!pdfFile || !excelFile) return alert("يرجى اختيار الملفات أولاً!");
+async function start() {
 
-        document.getElementById('loader').style.display = 'block';
-        document.getElementById('resultArea').innerHTML = "";
+    const pdfFile = document.getElementById('pdfInput').files[0];
+    const excelFile = document.getElementById('excelInput').files[0];
 
-        const pdfBytes = await pdfFile.arrayBuffer();
-        const reader = new FileReader();
-
-        reader.onload = async function(e) {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, {type: 'array'});
-            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1});
-            
-            // سحب الأسماء وتجاوز العنوان
-            const names = rows.slice(1, 4).map(r => r[0]);
-
-            for (let name of names) {
-                if (name) await createPDF(pdfBytes, name.toString().toUpperCase());
-            }
-            document.getElementById('loader').style.display = 'none';
-        };
-        reader.readAsArrayBuffer(excelFile);
+    if (!pdfFile || !excelFile) {
+        alert("يرجى اختيار ملف PDF وملف Excel");
+        return;
     }
 
-    async function createPDF(baseBytes, name) {
-        const { PDFDocument, rgb, StandardFonts } = PDFLib;
-        const pdfDoc = await PDFDocument.load(baseBytes);
-        const page = pdfDoc.getPages()[0];
-        const { width, height } = page.getSize();
-        const font = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
+    const pdfBytes = await pdfFile.arrayBuffer();
+    const reader = new FileReader();
 
-        const fontSize = height * 0.048;
-        const textWidth = font.widthOfTextAtSize(name, fontSize);
+    reader.onload = async (e) => {
 
-        [span_0](start_span)// اللون النحاسي البرتقالي المطابق للأصل[span_0](end_span)
-        const copperColor = rgb(0.44, 0.24, 0.07); 
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
-        page.drawText(name, {
-            x: (width - textWidth) / 2,
-            [span_1](start_span)y: height * 0.53, // الموقع الصحيح لمنع التداخل[span_1](end_span)
-            size: fontSize,
-            font: font,
-            color: copperColor,
-        });
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-        const modifiedBytes = await pdfDoc.save();
-        const url = URL.createObjectURL(new Blob([modifiedBytes], { type: 'application/pdf' }));
-        
-        addResultItem(name, url);
-    }
+        for (let i = 1; i < rows.length; i++) {
+            const name = rows[i][0];
+            if (name) await generatePDF(pdfBytes, name);
+        }
+    };
 
-    function addResultItem(name, url) {
-        const div = document.createElement('div');
-        div.className = "item-card";
-        div.innerHTML = `
-            <span><strong>👤 ${name}</strong></span>
-            <div class="action-btns">
-                <a href="${url}" target="_blank" class="sub-btn preview-btn">👁️ معاينة</a>
-                <a href="${url}" download="${name}.pdf" class="sub-btn download-btn">📥 تحميل</a>
-            </div>`;
-        document.getElementById('resultArea').appendChild(div);
-    }
+    reader.readAsArrayBuffer(excelFile);
+}
+
+async function generatePDF(baseBytes, name) {
+
+    const { PDFDocument, rgb, StandardFonts } = PDFLib;
+
+    const pdfDoc = await PDFDocument.load(baseBytes);
+    const page = pdfDoc.getPages()[0];
+    const { width, height } = page.getSize();
+
+    const font = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
+
+    const fontSize = height * 0.055;
+    const textWidth = font.widthOfTextAtSize(name, fontSize);
+
+    page.drawText(String(name).toUpperCase(), {
+        x: (width - textWidth) / 2,  // توسيط تلقائي
+        y: height * 0.615,          // نفس موضع الاسم في الصورة
+        size: fontSize,
+        font: font,
+        color: rgb(0.44, 0.24, 0.07) // لون مطابق للشهادة
+    });
+
+    const bytes = await pdfDoc.save();
+    const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+        <span>${name}</span>
+        <a href="${url}" target="_blank">👁️ معاينة</a>
+        <a href="${url}" download="شهادة_${name}.pdf">📥 تحميل</a>
+    `;
+    document.getElementById("result").appendChild(div);
+}
 </script>
 
 </body>
 </html>
-
