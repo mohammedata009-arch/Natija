@@ -3,169 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام الشهادات الذكي - إصدار 2026</title>
+    <title>نظام الشهادات الاحترافي 2026</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
-        .panel { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 700px; margin-bottom: 15px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        input, select { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        .tool-box { background: #e3f2fd; padding: 15px; border-radius: 10px; margin: 10px 0; border: 1px solid #90caf9; }
-        button { width: 100%; padding: 12px; background: #002d72; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .canvas-wrapper { position: relative; border: 2px solid #002d72; background: white; max-width: 100%; overflow: auto; }
-        #status { font-weight: bold; color: #2e7d32; margin: 10px 0; text-align: center; }
-        .label-sm { font-size: 12px; font-weight: bold; color: #555; display: block; margin-top: 5px; }
+        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 600px; }
+        .step { background: #e3f2fd; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #90caf9; }
+        input, select { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #002d72; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-excel { background: #2e7d32; }
+        .canvas-wrapper { border: 2px solid #002d72; margin-top: 20px; max-width: 100%; overflow: auto; background: #fff; }
+        #status { font-weight: bold; color: #d32f2f; text-align: center; margin: 10px; }
     </style>
 </head>
 <body>
 
-<div class="panel">
-    <h3>🎓 نظام المعالجة الذكي (100 شهادة)</h3>
+<div class="card">
+    <h2>🚀 معالج الشهادات الجماعي</h2>
     
-    <div class="grid">
-        <div>
-            <label class="label-sm">1. قالب الشهادة الأساسي:</label>
-            <input type="file" id="bgLoad" accept="image/*">
-        </div>
-        <div>
-            <label class="label-sm">2. ملف التوقيع (PNG شفاف):</label>
-            <input type="file" id="signLoad" accept="image/*">
-        </div>
+    <div class="step">
+        <label>1. ارفع صورة الشهادة (القالب):</label>
+        <input type="file" id="bgInput" accept="image/*">
     </div>
 
-    <label class="label-sm">3. ملف الاكسل (المتدرب، المدرب، البرنامج، التاريخ):</label>
-    <input type="file" id="excelLoad" accept=".xlsx, .xls">
-
-    <div class="tool-box">
-        <div class="grid">
-            <div>
-                <label class="label-sm">الأداة الحالية:</label>
-                <select id="tool">
-                    <option value="trainee">اسم المتدرب</option>
-                    <option value="trainer">اسم المدرب</option>
-                    <option value="course">اسم البرنامج</option>
-                    <option value="date">التاريخ</option>
-                    <option value="signature">التوقيع</option>
-                    <option value="serial">الرقم التسلسلي</option>
-                </select>
-            </div>
-            <div>
-                <label class="label-sm">حجم الخط (بكسل):</label>
-                <input type="number" id="fontSize" value="50">
-            </div>
-        </div>
-        <div class="grid">
-            <div>
-                <label class="label-sm">بداية الرقم التسلسلي:</label>
-                <input type="number" id="serialStart" value="1001">
-            </div>
-            <div>
-                <label class="label-sm">لون الخط:</label>
-                <input type="color" id="fontColor" value="#002d72">
-            </div>
-        </div>
+    <div class="step">
+        <label>2. ملف الاكسل (البيانات):</label>
+        <button class="btn-excel" onclick="downloadSample()">⬇️ تحميل نموذج اكسل صحيح (ابدأ من هنا)</button>
+        <input type="file" id="excelInput" accept=".xlsx, .xls">
     </div>
 
-    <button onclick="processAll()" style="background: #c62828;">بدء استخراج الشهادات (تثبيت المواقع أولاً) 🚀</button>
-    <div id="status">جاهز للاستخدام..</div>
+    <div class="step">
+        <label>3. ضبط الخط والمكان:</label>
+        <div style="display: flex; gap: 10px;">
+            <select id="tool">
+                <option value="trainee">اسم المتدرب</option>
+                <option value="trainer">اسم المدرب</option>
+                <option value="course">اسم البرنامج</option>
+                <option value="date">التاريخ</option>
+                <option value="serial">الرقم التسلسلي</option>
+            </select>
+            <input type="number" id="fSize" value="50" style="width: 80px;">
+        </div>
+        <p style="font-size: 11px; color: #555;">* اختر العنصر ثم اضغط على مكانه في الصورة بالأسفل لمرة واحدة.</p>
+    </div>
+
+    <div id="status">جاهز...</div>
+    <button onclick="generateAll()">إصدار كافة الشهادات الآن 📄</button>
 </div>
 
 <div class="canvas-wrapper">
-    <canvas id="editor"></canvas>
+    <canvas id="canvas"></canvas>
 </div>
 
 <script>
-    const canvas = document.getElementById('editor');
+    const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    let bg = new Image(), sign = new Image();
-    let excelData = [], locations = {};
+    let bg = new Image(), excelData = [], locations = {};
 
-    // تحميل الصور
-    document.getElementById('bgLoad').onchange = e => loadFile(e, bg);
-    document.getElementById('signLoad').onchange = e => loadFile(e, sign);
-    
-    function loadFile(e, imgObj) {
+    // 1. تحميل الصورة
+    document.getElementById('bgInput').onchange = (e) => {
         const r = new FileReader();
-        r.onload = ev => { 
-            imgObj.onload = () => { if(imgObj === bg) { canvas.width = bg.width; canvas.height = bg.height; } render(); };
-            imgObj.src = ev.target.result; 
+        r.onload = (ev) => {
+            bg.onload = () => { canvas.width = bg.width; canvas.height = bg.height; draw(); };
+            bg.src = ev.target.result;
         };
         r.readAsDataURL(e.target.files[0]);
-    }
+    };
 
-    // قراءة الاكسل
-    document.getElementById('excelLoad').onchange = e => {
+    // 2. تحميل الاكسل
+    document.getElementById('excelInput').onchange = (e) => {
         const r = new FileReader();
-        r.onload = ev => {
+        r.onload = (ev) => {
             const data = new Uint8Array(ev.target.result);
             const wb = XLSX.read(data, {type: 'array'});
-            excelData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]).slice(0, 100);
-            document.getElementById('status').innerText = `تم تحميل ${excelData.length} سطر.`;
+            excelData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+            document.getElementById('status').innerText = `تم تحميل ${excelData.length} اسم بنجاح.`;
         };
         r.readAsArrayBuffer(e.target.files[0]);
     };
 
-    // تحديد المواقع بنقرة واحدة
-    canvas.addEventListener('mousedown', e => {
+    // 3. تحديد المكان بالضغط
+    canvas.addEventListener('mousedown', (e) => {
         const rect = canvas.getBoundingClientRect();
         const tool = document.getElementById('tool').value;
         locations[tool] = {
             x: (e.clientX - rect.left) * (canvas.width / rect.width),
             y: (e.clientY - rect.top) * (canvas.height / rect.height),
-            size: document.getElementById('fontSize').value,
-            color: document.getElementById('fontColor').value
+            size: document.getElementById('fSize').value
         };
-        render();
+        draw();
     });
 
-    function render() {
+    function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         if (bg.src) ctx.drawImage(bg, 0, 0);
-        for (let key in locations) {
-            ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
-            ctx.beginPath(); ctx.arc(locations[key].x, locations[key].y, 15, 0, Math.PI*2); ctx.fill();
+        for (let k in locations) {
+            ctx.fillStyle = "red"; ctx.beginPath(); ctx.arc(locations[k].x, locations[k].y, 10, 0, Math.PI*2); ctx.fill();
         }
     }
 
-    async function processAll() {
-        if (!bg.src || excelData.length === 0) return alert("ارفع القالب والاكسل أولاً!");
-        const { jsPDF } = window.jspdf;
-        let currentSerial = parseInt(document.getElementById('serialStart').value);
+    // تحميل النموذج الصحيح
+    function downloadSample() {
+        const data = [["المتدرب", "المدرب", "البرنامج", "التاريخ"]];
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+        XLSX.writeFile(wb, "Template_Correct.xlsx");
+    }
 
+    async function generateAll() {
+        if (!bg.src || excelData.length === 0) {
+            alert("تنبيه: ارفع القالب والاكسل أولاً وحدد الأماكن!");
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
         for (let i = 0; i < excelData.length; i++) {
-            document.getElementById('status').innerText = `جاري معالجة الشهادة ${i+1}...`;
             const row = excelData[i];
             ctx.drawImage(bg, 0, 0);
 
             const map = {
-                trainee: row['المتدرب'] || row['Name'] || "",
-                trainer: row['المدرب'] || row['Trainer'] || "",
-                course: row['البرنامج'] || row['Course'] || "",
-                date: row['التاريخ'] || row['Date'] || "",
-                serial: (currentSerial + i).toString()
+                trainee: row['المتدرب'] || "",
+                trainer: row['المدرب'] || "",
+                course: row['البرنامج'] || "",
+                date: row['التاريخ'] || "",
+                serial: (1001 + i).toString()
             };
 
-            for (let key in locations) {
-                let loc = locations[key];
-                if (key === 'signature' && sign.src) {
-                    let sw = canvas.width * 0.15;
-                    ctx.drawImage(sign, loc.x - sw/2, loc.y - sw/2, sw, sw * (sign.height/sign.width));
-                } else if (map[key]) {
+            for (let k in locations) {
+                let loc = locations[k];
+                if (map[k]) {
                     ctx.fillStyle = "white"; // مسح الخلفية
-                    ctx.fillRect(loc.x - (canvas.width*0.2), loc.y - loc.size, canvas.width*0.4, loc.size * 1.5);
-                    ctx.fillStyle = loc.color;
+                    ctx.fillRect(loc.x - (canvas.width*0.25), loc.y - loc.size, canvas.width*0.5, loc.size * 1.5);
+                    ctx.fillStyle = "#002d72";
                     ctx.font = `bold ${loc.size}px Arial`;
                     ctx.textAlign = "center";
-                    ctx.fillText(map[key], loc.x, loc.y);
+                    ctx.fillText(map[k], loc.x, loc.y);
                 }
             }
-            
             const pdf = new jsPDF({ orientation: canvas.width > canvas.height ? 'l' : 'p', unit: 'px', format: [canvas.width, canvas.height] });
             pdf.addImage(canvas.toDataURL('image/jpeg', 0.8), 'JPEG', 0, 0, canvas.width, canvas.height);
-            pdf.save(`Certificate_${i+1}.pdf`);
+            pdf.save(`شهادة_${i+1}.pdf`);
         }
-        document.getElementById('status').innerText = "تم الانتهاء بنجاح! ✅";
     }
 </script>
 </body>
