@@ -1,138 +1,91 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>نظام إصدار الشهادات الذكي</title>
+<title>نظام الشهادات الذكي</title>
 
 <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
-body {
-    font-family: Tahoma, Arial;
-    background: #f4f6f8;
-    padding: 20px;
-    text-align: center;
-}
-.box {
-    max-width: 600px;
-    background: white;
-    margin: auto;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0,0,0,.1);
-}
-input, button {
-    width: 100%;
-    margin: 10px 0;
-    padding: 12px;
-    font-size: 16px;
-}
-button {
-    background: #d35400;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-}
-.result {
-    margin-top: 20px;
-    text-align: right;
-}
-.item {
-    background: #fff;
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.item a {
-    text-decoration: none;
-    color: #27ae60;
-}
+body{font-family:Segoe UI;background:#f5f6fa;padding:20px;text-align:center}
+.card{max-width:600px;margin:auto;background:#fff;padding:30px;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
+input,button{width:100%;margin:10px 0;padding:12px}
+button{background:#d35400;color:#fff;border:none;border-radius:8px;font-size:18px;cursor:pointer}
+.preview{margin-top:20px}
 </style>
 </head>
-
 <body>
 
-<div class="box">
-<h2>📄 إصدار الشهادات من Excel</h2>
+<div class="card">
+<h2>🎓 توليد الشهادات من Excel</h2>
 
 <input type="file" id="pdfInput" accept=".pdf">
 <input type="file" id="excelInput" accept=".xlsx,.xls">
 
+<label>⬇️ إنزال الاسم للأسفل (معاينة)</label>
+<input type="range" id="yOffset" min="0" max="200" value="40">
+<div>القيمة: <span id="yVal">40</span></div>
+
 <button onclick="start()">🚀 إنشاء الشهادات</button>
 
-<div class="result" id="result"></div>
+<div id="result" class="preview"></div>
 </div>
 
 <script>
-async function start() {
+const ySlider=document.getElementById("yOffset");
+const yVal=document.getElementById("yVal");
+ySlider.oninput=()=>yVal.innerText=ySlider.value;
 
-    const pdfFile = document.getElementById('pdfInput').files[0];
-    const excelFile = document.getElementById('excelInput').files[0];
+async function start(){
+ const pdfFile=pdfInput.files[0];
+ const excelFile=excelInput.files[0];
+ if(!pdfFile||!excelFile) return alert("اختر الملفات");
 
-    if (!pdfFile || !excelFile) {
-        alert("يرجى اختيار ملف PDF وملف Excel");
-        return;
-    }
+ const basePdf=await pdfFile.arrayBuffer();
 
-    const pdfBytes = await pdfFile.arrayBuffer();
-    const reader = new FileReader();
+ const reader=new FileReader();
+ reader.onload=async e=>{
+   const wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"});
+   const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1});
+   const names=rows.slice(1).map(r=>r[0]).filter(Boolean);
 
-    reader.onload = async (e) => {
-
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-
-        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-        for (let i = 1; i < rows.length; i++) {
-            const name = rows[i][0];
-            if (name) await generatePDF(pdfBytes, name);
-        }
-    };
-
-    reader.readAsArrayBuffer(excelFile);
+   for(const name of names){
+     await makePDF(basePdf,name.toString());
+   }
+ };
+ reader.readAsArrayBuffer(excelFile);
 }
 
-async function generatePDF(baseBytes, name) {
+async function makePDF(bytes,name){
+ const {PDFDocument,StandardFonts,rgb}=PDFLib;
+ const pdf=await PDFDocument.load(bytes);
+ const page=pdf.getPages()[0];
+ const {width,height}=page.getSize();
 
-    const { PDFDocument, rgb, StandardFonts } = PDFLib;
+ const font=await pdf.embedFont(StandardFonts.TimesRomanBold);
+ const fontSize=height*0.05;
+ const textWidth=font.widthOfTextAtSize(name,fontSize);
 
-    const pdfDoc = await PDFDocument.load(baseBytes);
-    const page = pdfDoc.getPages()[0];
-    const { width, height } = page.getSize();
+ const offset=Number(ySlider.value);
 
-    const font = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
+ page.drawText(name,{
+   x:(width-textWidth)/2,
+   y:(height/2)-offset,
+   size:fontSize,
+   font,
+   color:rgb(0.44,0.24,0.07)
+ });
 
-    const fontSize = height * 0.055;
-    const textWidth = font.widthOfTextAtSize(name, fontSize);
+ const out=await pdf.save();
+ const url=URL.createObjectURL(new Blob([out],{type:"application/pdf"}));
 
-    page.drawText(String(name).toUpperCase(), {
-        x: (width - textWidth) / 2,  // توسيط تلقائي
-        y: height * 0.615,          // نفس موضع الاسم في الصورة
-        size: fontSize,
-        font: font,
-        color: rgb(0.44, 0.24, 0.07) // لون مطابق للشهادة
-    });
-
-    const bytes = await pdfDoc.save();
-    const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
-
-    const div = document.createElement("div");
-    div.className = "item";
-    div.innerHTML = `
-        <span>${name}</span>
-        <a href="${url}" target="_blank">👁️ معاينة</a>
-        <a href="${url}" download="شهادة_${name}.pdf">📥 تحميل</a>
-    `;
-    document.getElementById("result").appendChild(div);
+ const div=document.createElement("div");
+ div.innerHTML=`👤 ${name}
+ <a href="${url}" target="_blank">معاينة</a> |
+ <a href="${url}" download="شهادة_${name}.pdf">تحميل</a>`;
+ result.appendChild(div);
 }
 </script>
 
