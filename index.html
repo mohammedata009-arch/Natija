@@ -49,11 +49,11 @@ function mm2pt(mm) {
 
 // ==================== إعدادات العناصر بالملليمتر ====================
 const elementSettingsMM = {
-    name:     { x: 105, y: 150, fontMM: 10 }, // منتصف الصفحة تقريباً
-    trainer:  { x: 20, y: 120, fontMM: 6 },
-    hours:    { x: 20, y: 100, fontMM: 6 },
-    date:     { x: 20, y: 80, fontMM: 6 },
-    serial:   { x: 150, y: 120, fontMM: 6 }
+    name:     { x: 105, y: 150, fontMM: 10 }, // اسم الطالب
+    trainer:  { x: 20,  y: 120, fontMM: 6 },  // اسم المدرب
+    hours:    { x: 20,  y: 100, fontMM: 6 },  // عدد الساعات
+    date:     { x: 20,  y: 80,  fontMM: 6 },  // التاريخ
+    serial:   { x: 150, y: 120, fontMM: 6 }   // الرقم التسلسلي
 };
 
 async function start() {
@@ -99,7 +99,7 @@ async function makePDF(bytes, data) {
         const fontSize = mm2pt(el.fontMM);
         page.drawText(text, {
             x: mm2pt(el.x),
-            y: height - mm2pt(el.y) - offset, // لأن أصل الإحداثيات أسفل الصفحة
+            y: height - mm2pt(el.y) - offset,
             size: fontSize,
             font,
             color: rgb(0,0,0)
