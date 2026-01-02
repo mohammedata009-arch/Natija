@@ -3,47 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مستخرج الشهادات الاحترافي</title>
+    <title>مستخرج الشهادات الذكي - مطابقة تلقائية</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; display: flex; justify-content: center; padding: 20px; margin: 0; }
-        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: #002d72; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; }
-        #status { margin-top: 15px; font-size: 14px; color: #e67e22; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f4f8; display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
+        h2 { color: #002d72; margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 14px; }
+        .config { background: #f9f9f9; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: right; border: 1px solid #eee; }
+        button { width: 100%; padding: 15px; background-color: #002d72; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background-color: #001a44; }
+        #status { margin-top: 15px; font-weight: bold; color: #27ae60; }
         canvas { display: none; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>🎓 معالج الشهادات الدقيق</h2>
-    <p style="font-size: 13px; color: #666;">تم الضبط ليناسب مكان الاسم في قالبك</p>
+<div class="container">
+    <h2>🎓 معالج الشهادات الذكي</h2>
     
-    <input type="file" id="pdfFile" accept="image/*,.pdf">
-    <input type="text" id="name" placeholder="الاسم الجديد">
-    
-    <label style="font-size: 12px; display: block; margin-top: 10px;">لون الممحاة (تلقائي أبيض):</label>
-    <input type="color" id="bgColor" value="#ffffff">
-    
-    <button onclick="generate()">توليد الشهادة المستبدلة ✅</button>
+    <div class="config">
+        <label>1. ارفع القالب (صورة أو PDF):</label>
+        <input type="file" id="fileInput" accept="image/*,.pdf">
+    </div>
+
+    <input type="text" id="traineeName" placeholder="اسم المتدرب الجديد">
+    <input type="text" id="trainerName" placeholder="اسم المدرب (اختياري)">
+    <input type="text" id="certDate" placeholder="التاريخ">
+
+    <button onclick="process()">استخراج مطابق للخلفية ✅</button>
     <div id="status"></div>
     <canvas id="canvas"></canvas>
 </div>
 
 <script>
-    async function generate() {
+    async function process() {
+        const fileInput = document.getElementById('fileInput');
+        const trainee = document.getElementById('traineeName').value;
+        const trainer = document.getElementById('trainerName').value;
+        const date = document.getElementById('certDate').value;
         const status = document.getElementById('status');
-        const fileInput = document.getElementById('pdfFile').files[0];
-        const name = document.getElementById('name').value;
-        const bgColor = document.getElementById('bgColor').value;
-
-        if (!fileInput || !name) {
-            alert("يرجى رفع ملف وإدخال الاسم");
+        
+        if (!fileInput.files[0] || !trainee) {
+            alert("يرجى رفع الشهادة وإدخال اسم المتدرب");
             return;
         }
 
-        status.innerText = "جاري الاستبدال بدقة...";
+        status.innerText = "جاري مطابقة النصوص مع الخلفية...";
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const reader = new FileReader();
@@ -55,28 +61,42 @@
                 canvas.height = img.height;
                 ctx.drawImage(img, 0, 0);
 
-                // --- 1. المسح الدقيق فوق الاسم القديم ---
+                // --- ميزة مطابقة الخلفية ---
+                // نأخذ لوناً من بكسل قريب لضمان المسح المخفي
+                const pixelData = ctx.getImageData(canvas.width/2, canvas.height * 0.5, 1, 1).data;
+                const bgColor = `rgb(${pixelData[0]}, ${pixelData[1]}, ${pixelData[2]})`;
                 ctx.fillStyle = bgColor;
-                const eraseWidth = canvas.width * 0.45; // عرض منطقة الاسم
-                const eraseHeight = canvas.height * 0.04; // سمك نحيف جداً للمسح
-                
-                // الإحداثيات تم ضبطها لتنزل أسفل المنتصف قليلاً (0.55)
-                ctx.fillRect(
-                    canvas.width/2 - eraseWidth/2, 
-                    canvas.height * 0.545, 
-                    eraseWidth, 
-                    eraseHeight
-                );
 
-                // --- 2. كتابة الاسم الجديد ---
-                ctx.fillStyle = "#002d72"; // لون أزرق ملكي يطابق شهادتك
+                // 1. مسح وكتابة اسم المتدرب (المنتصف)
+                const tw = canvas.width * 0.5;
+                const th = canvas.height * 0.06;
+                ctx.fillRect(canvas.width/2 - tw/2, canvas.height * 0.54, tw, th);
+                
+                ctx.fillStyle = "#002d72"; // لون النص المطابق لشهادتك
                 ctx.textAlign = "center";
-                ctx.font = `bold ${img.width / 26}px Arial`; 
-                
-                // كتابة الاسم الجديد فوق المنطقة الممسوحة بالضبط
-                ctx.fillText(name, canvas.width / 2, canvas.height * 0.575);
+                ctx.font = `bold ${img.width / 24}px Arial`;
+                ctx.fillText(trainee, canvas.width / 2, canvas.height * 0.58);
 
-                // --- 3. التحميل كـ PDF ---
+                // 2. مسح وكتابة اسم المدرب (أسفل اليمين)
+                if (trainer) {
+                    ctx.fillStyle = bgColor;
+                    ctx.fillRect(canvas.width * 0.1, canvas.height * 0.78, canvas.width * 0.3, canvas.height * 0.04);
+                    ctx.fillStyle = "#333"; 
+                    ctx.font = `${img.width / 45}px Arial`;
+                    ctx.textAlign = "right";
+                    ctx.fillText(trainer, canvas.width * 0.35, canvas.height * 0.81);
+                }
+
+                // 3. مسح وكتابة التاريخ (أسفل اليسار)
+                if (date) {
+                    ctx.fillStyle = bgColor;
+                    ctx.fillRect(canvas.width * 0.6, canvas.height * 0.78, canvas.width * 0.3, canvas.height * 0.04);
+                    ctx.fillStyle = "#333";
+                    ctx.textAlign = "left";
+                    ctx.fillText(date, canvas.width * 0.65, canvas.height * 0.81);
+                }
+
+                // التصدير
                 const imgData = canvas.toDataURL('image/jpeg', 1.0);
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF({
@@ -84,14 +104,13 @@
                     unit: 'px',
                     format: [canvas.width, canvas.height]
                 });
-                
                 pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height);
-                pdf.save(`Certificate_${name}.pdf`);
-                status.innerText = "تم التعديل والتحميل! ✅";
+                pdf.save(`شهادة_${trainee}.pdf`);
+                status.innerText = "تم التعديل بنجاح! ✅";
             };
             img.src = e.target.result;
         };
-        reader.readAsDataURL(fileInput);
+        reader.readAsDataURL(fileInput.files[0]);
     }
 </script>
 </body>
