@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مستخرج الشهادات الذكي</title>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/@pdf-lib/fontkit@0.0.4/dist/fontkit.umd.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
+        h2 { color: #2c3e50; margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        button { width: 100%; padding: 15px; margin-top: 15px; background: #1a73e8; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #1557b0; }
+        .footer { margin-top: 15px; font-size: 12px; color: #7f8c8d; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>🎓 صانع الشهادات الذكي</h2>
+    <p>يدعم العربية والإنجليزية بجودة عالية</p>
+    
+    <input type="file" id="pdfTemplate" accept=".pdf">
+    <input type="text" id="name" placeholder="اسم المتدرب الكامل">
+    <input type="text" id="trainer" placeholder="اسم المدرب">
+    <input type="text" id="date" placeholder="التاريخ">
+    <input type="text" id="serial" placeholder="الرقم التسلسلي">
+    
+    <button id="generateBtn" onclick="generateCertificate()">استخراج الشهادة الآن ✅</button>
+    <p id="status" style="display:none; color: #e67e22;">جاري معالجة الخطوط، يرجى الانتظار...</p>
+    
+    <div class="footer">سيتم تحميل الشهادة تلقائياً بعد المعالجة</div>
+</div>
+
+<script>
+    async function generateCertificate() {
+        const pdfInput = document.getElementById('pdfTemplate').files[0];
+        const name = document.getElementById('name').value;
+        const btn = document.getElementById('generateBtn');
+        const status = document.getElementById('status');
+
+        if (!pdfInput || !name) {
+            alert("يرجى اختيار ملف PDF وإدخال اسم المتدرب");
+            return;
+        }
+
+        btn.disabled = true;
+        status.style.display = "block";
+
+        try {
+            // 1. قراءة ملف الـ PDF الأصلي
+            const existingPdfBytes = await pdfInput.arrayBuffer();
+            const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+            
+            // 2. تفعيل دعم الخطوط الخارجية
+            pdfDoc.registerFontkit(fontkit);
+
+            // 3. تحميل خط عربي يدعم العربية والانجليزية (Cairo)
+            const fontUrl = 'https://raw.githubusercontent.com/googlefonts/cairo/main/fonts/ttf/Cairo-Bold.ttf';
+            const fontBytes = await fetch(fontUrl).then(res => res.arrayBuffer());
+            const customFont = await pdfDoc.embedFont(fontBytes);
+
+            const pages = pdfDoc.getPages();
+            const firstPage = pages[0];
+            const { width, height } = firstPage.getSize();
+
+            // إعدادات الكتابة
+            const drawText = (text, x, y, size) => {
+                firstPage.drawText(text, {
+                    x: x,
+                    y: y,
+                    size: size,
+                    font: customFont,
+                    color: PDFLib.rgb(0, 0, 0),
+                });
+            };
+
+            // 4. وضع النصوص في أماكنها (يمكنك تعديل الإحداثيات هنا)
+            // وضع الاسم في المنتصف تقريباً
+            drawText(name, width / 2 - (name.length * 5), height / 2 + 30, 30);
+            
+            // بيانات إضافية
+            const trainerName = document.getElementById('trainer').value;
+            const dateStr = document.getElementById('date').value;
+            const serialNum = document.getElementById('serial').value;
+
+            if (trainerName) drawText(trainerName, 150, 200, 16);
+            if (dateStr) drawText(dateStr, 400, 200, 16);
+            if (serialNum) drawText("ID: " + serialNum, 50, height - 50, 12);
+
+            // 5. حفظ الملف وتحميله
+            const pdfBytes = await pdfDoc.save();
+            const blob = new Blob([pdfBytes], { type: "application/pdf" });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Certificate_${name}.pdf`;
+            link.click();
+
+        } catch (err) {
+            console.error(err);
+            alert("حدث خطأ أثناء إنشاء الشهادة. تأكد من اتصالك بالإنترنت.");
+        } finally {
+            btn.disabled = false;
+            status.style.display = "none";
+        }
+    }
+</script>
+
+</body>
+</html>
