@@ -1,223 +1,224 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>نظام PDF الذكي المطوّر 2026</title>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-<style>
-:root { --primary:#0056b3; --accent:#28a745; }
-body { font-family:'Segoe UI', sans-serif; background:#f4f7f9; padding:20px; text-align:center; }
-.container { max-width:1000px; margin:auto; background:white; padding:25px; border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,0.1); }
-.upload-section { display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px; }
-.file-box { border:2px dashed #ccc; padding:15px; border-radius:10px; transition:0.3s; }
-.file-box:hover { border-color:var(--primary); background:#f0f7ff; }
-button { background:var(--primary); color:white; border:none; padding:12px 25px; border-radius:8px; cursor:pointer; font-size:16px; margin:5px; }
-button:disabled { background:#ccc; cursor:not-allowed; }
-#status { margin:15px; font-weight:bold; color:var(--primary); }
-canvas { max-width:100%; border:1px solid #ddd; margin-top:10px; display:none; }
-.detected-fields { margin-top:15px; text-align:right; background:#eee; padding:10px; border-radius:8px; }
-#dataEditor { margin-top:20px; overflow:auto; max-height:300px; }
-table { border-collapse:collapse; width:100%; }
-td, th { border:1px solid #999; padding:5px; text-align:center; min-width:80px; }
-input { width:100%; box-sizing:border-box; text-align:center; }
-</style>
+    <meta charset="UTF-8">
+    <title>نظام دمج الشهادات الذكي 2026</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <style>
+        :root { --primary: #1a73e8; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .upload-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        .drop-zone { border: 2px dashed #dadce0; padding: 20px; border-radius: 10px; text-align: center; transition: 0.3s; background: #fff; }
+        .drop-zone:hover { border-color: var(--primary); background: #f1f8ff; }
+        .drop-zone label { display: block; font-weight: bold; margin-bottom: 10px; color: var(--primary); }
+        button { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 500; transition: 0.3s; }
+        button:hover { background: #1557b0; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        #log { margin-top: 20px; padding: 15px; border-radius: 6px; font-weight: 500; text-align: center; }
+        .canvas-wrapper { margin-top: 20px; overflow: auto; border: 1px solid #eee; border-radius: 8px; max-height: 500px; display: none; }
+        canvas { display: block; margin: auto; }
+        .info-tag { font-size: 12px; color: #666; margin-top: 5px; }
+    </style>
 </head>
-
 <body>
+
 <div class="container">
-<h2>🧠 نظام PDF الذكي المطوّر</h2>
-<p>رفع نسخة فارغة ونسخة مليئة لاستخراج الحقول، أو إدخال البيانات مباشرة من محرر الجدول.</p>
+    <div class="header">
+        <h1>🎓 محرك الشهادات الذكي (التحليل البصري)</h1>
+        <p>قارن بين ملفين PDF واستخرج الإحداثيات تلقائياً لدمج بيانات Excel</p>
+    </div>
 
-<div class="upload-section">
-<div class="file-box">
-<label>1. PDF فارغ (القالب)</label>
-<input type="file" id="pdfEmpty" accept=".pdf">
-</div>
-<div class="file-box">
-<label>2. PDF مليء (للمقارنة)</label>
-<input type="file" id="pdfFull" accept=".pdf">
-</div>
-</div>
+    <div class="upload-grid">
+        <div class="drop-zone">
+            <label>1. ملف PDF فارغ</label>
+            <input type="file" id="pdfEmpty" accept=".pdf">
+            <div class="info-tag">القالب الذي سيتم استخدامه</div>
+        </div>
+        <div class="drop-zone">
+            <label>2. ملف PDF معبأ (مثال)</label>
+            <input type="file" id="pdfFull" accept=".pdf">
+            <div class="info-tag">يحتوي على بيانات عشوائية للمقارنة</div>
+        </div>
+        <div class="drop-zone">
+            <label>3. ملف Excel</label>
+            <input type="file" id="excelInput" accept=".xlsx, .xls">
+            <div class="info-tag">يحتوي على بيانات المتدربين</div>
+        </div>
+    </div>
 
-<div class="file-box" style="margin-bottom:20px;">
-<label>3. Excel جديد (اختياري إذا لم تستخدم المحرر)</label>
-<input type="file" id="excelInput" accept=".xlsx,.xls">
-</div>
+    <div style="text-align: center; border-top: 1px solid #eee; pt-20px; padding-top: 20px;">
+        <button id="analyzeBtn" onclick="processAnalysis()">تحليل ومقارنة النسخ 🔍</button>
+        <button id="generateBtn" onclick="generateFinalPDF()" disabled>توليد وتحميل الملف المدمج 📄</button>
+    </div>
 
-<button id="analyzeBtn" onclick="analyzePDFs()">تحليل الفروقات واكتشاف الحقول 🔍</button>
-<button id="generateBtn" onclick="generateNewPDFs()" disabled>إصدار الملفات الجديدة 📄</button>
+    <div id="log">في انتظار رفع الملفات...</div>
 
-<div id="status">جاهز للاستخدام...</div>
-
-<div id="results" style="display:none;">
-<h3>المناطق المكتشفة:</h3>
-<div id="fieldsList" class="detected-fields"></div>
-<canvas id="diffCanvas"></canvas>
-</div>
-
-<h3>📝 محرر البيانات (يمكنك استخدامه بدلاً من رفع Excel)</h3>
-<div id="dataEditor">
-<table id="dataTable">
-<tr>
-<th>اسم</th><th>مدرب</th><th>برنامج</th><th>تاريخ</th>
-</tr>
-<tr>
-<td><input type="text"></td>
-<td><input type="text"></td>
-<td><input type="text"></td>
-<td><input type="text"></td>
-</tr>
-</table>
-<button onclick="addRow()">➕ إضافة صف</button>
-<button onclick="addColumn()">➕ إضافة عمود</button>
-</div>
-
+    <div class="canvas-wrapper" id="canvasWrapper">
+        <h3 style="text-align:center">نتائج التحليل (المناطق المكتشفة)</h3>
+        <canvas id="previewCanvas"></canvas>
+    </div>
 </div>
 
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-let detectedLocations=[], excelData=[], originalPdfBytes;
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
-function updateStatus(msg,isOk=false){const s=document.getElementById('status'); s.innerText=msg; s.style.color=isOk?"green":"var(--primary)";}
+    let detectedPoints = [];
+    let excelRows = [];
+    let templateBytes;
 
-// تحويل PDF إلى Canvas
-async function pdfToCanvas(file){
-  const arr=await file.arrayBuffer();
-  const pdf=await pdfjsLib.getDocument(arr).promise;
-  const page=await pdf.getPage(1);
-  const vp=page.getViewport({scale:1.5});
-  const cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height;
-  await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
-  return cv;
-}
-
-// تحليل الفروقات
-async function analyzePDFs(){
-  const emptyFile=document.getElementById('pdfEmpty').files[0];
-  const fullFile=document.getElementById('pdfFull').files[0];
-  if(!emptyFile||!fullFile)return alert("ارفع الملفين!");
-  updateStatus("⏳ جاري التحليل...");
-  const canvasE=await pdfToCanvas(emptyFile);
-  const canvasF=await pdfToCanvas(fullFile);
-  const ctxE=canvasE.getContext('2d'), ctxF=canvasF.getContext('2d');
-  const w=canvasE.width, h=canvasE.height;
-  const imgE=ctxE.getImageData(0,0,w,h).data;
-  const imgF=ctxF.getImageData(0,0,w,h).data;
-  let diffPoints=[];
-  for(let i=0;i<imgF.length;i+=4){
-    if((imgE[i]+imgE[i+1]+imgE[i+2])-(imgF[i]+imgF[i+1]+imgF[i+2])>180){
-      const idx=i/4; diffPoints.push({x:idx%w,y:Math.floor(idx/w)});
+    function log(msg, type = 'info') {
+        const el = document.getElementById('log');
+        el.innerText = msg;
+        el.style.color = type === 'error' ? '#d93025' : (type === 'success' ? '#188038' : '#1a73e8');
     }
-  }
-  detectedLocations=clusterPoints(diffPoints);
-  showPreview(canvasE,detectedLocations);
-  updateStatus(`✅ اكتمل التحليل! تم العثور على ${detectedLocations.length} حقل.`,true);
-  document.getElementById('generateBtn').disabled=false;
-  originalPdfBytes=await emptyFile.arrayBuffer();
-}
 
-function clusterPoints(points){
-  let clusters=[];
-  points.forEach(p=>{
-    let found=clusters.find(c=>Math.abs(c.x-p.x)<60 && Math.abs(c.y-p.y)<25);
-    if(!found)clusters.push({x:p.x,y:p.y});
-  });
-  return clusters.sort((a,b)=>(Math.abs(a.y-b.y)>10?a.y-b.y:a.x-b.x));
-}
-
-function showPreview(canvas,locations){
-  const resDiv=document.getElementById('results');
-  const listDiv=document.getElementById('fieldsList');
-  const dCanvas=document.getElementById('diffCanvas');
-  resDiv.style.display='block'; dCanvas.style.display='block';
-  dCanvas.width=canvas.width; dCanvas.height=canvas.height;
-  const ctx=dCanvas.getContext('2d'); ctx.drawImage(canvas,0,0);
-  listDiv.innerHTML="";
-  locations.forEach((loc,i)=>{
-    ctx.strokeStyle="red"; ctx.lineWidth=3; ctx.strokeRect(loc.x-50,loc.y-15,100,30);
-    ctx.fillStyle="red"; ctx.fillText(i+1,loc.x,loc.y-20);
-    listDiv.innerHTML+=`📍 حقل ${i+1}: مرتبط بعمود رقم ${i+1}<br>`;
-  });
-}
-
-// قراءة Excel
-excelInput.onchange=e=>{
-  const r=new FileReader();
-  r.onload=ev=>{
-    const wb=XLSX.read(new Uint8Array(ev.target.result),{type:"array"});
-    excelData=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1}).slice(1);
-    updateStatus(`📊 تم تحميل ${excelData.length} سجل من الإكسل`);
-  };
-  r.readAsArrayBuffer(e.target.files[0]);
-};
-
-// محرر البيانات
-function addRow(){
-  const table=document.getElementById('dataTable');
-  const row=table.insertRow();
-  for(let i=0;i<table.rows[0].cells.length;i++){
-    const cell=row.insertCell();
-    const input=document.createElement('input'); input.type='text'; cell.appendChild(input);
-  }
-}
-function addColumn(){
-  const table=document.getElementById('dataTable');
-  for(let i=0;i<table.rows.length;i++){
-    const cell=table.rows[i].insertCell();
-    const input=document.createElement('input'); input.type='text'; cell.appendChild(input);
-  }
-}
-function readTableData(){
-  const table=document.getElementById('dataTable');
-  const data=[];
-  for(let r=1;r<table.rows.length;r++){
-    const row=[];
-    for(let c=0;c<table.rows[r].cells.length;c++){
-      row.push(table.rows[r].cells[c].querySelector('input').value);
+    // 1. تحويل PDF لـ Canvas
+    async function pdfToCanvas(file) {
+        const data = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument(data).promise;
+        const page = await pdf.getPage(1);
+        const viewport = page.getViewport({ scale: 1.0 }); // سكّيل 1 للسرعة
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+        return canvas;
     }
-    data.push(row);
-  }
-  return data;
-}
 
-// إنشاء ملفات PDF جديدة
-async function generateNewPDFs(){
-  let rows=excelData.length?excelData:readTableData();
-  if(!rows.length) return alert("لا يوجد بيانات!");
-  updateStatus("⏳ جاري إنشاء الملفات...");
-  const {PDFDocument,rgb}=PDFLib;
-  const canvasW=document.getElementById('diffCanvas').width;
-  const canvasH=document.getElementById('diffCanvas').height;
-  for(let row of rows){
-    const pdfDoc=await PDFDocument.load(originalPdfBytes);
-    const pages=pdfDoc.getPages();
-    const page=pages[0];
-    const {width,height}=page.getSize();
-    detectedLocations.forEach((loc,i)=>{
-      if(row[i]){
-        const pdfX=(loc.x/canvasW)*width;
-        const pdfY=height-((loc.y/canvasH)*height);
-        page.drawText(String(row[i]),{
-          x:pdfX-30,
-          y:pdfY,
-          size:14,
-          color:rgb(0,0,0.5)
+    // 2. التحليل الذكي بالمقارنة (الخوارزمية المسرعة)
+    async function processAnalysis() {
+        const f1 = document.getElementById('pdfEmpty').files[0];
+        const f2 = document.getElementById('pdfFull').files[0];
+
+        if (!f1 || !f2) return log("❌ يرجى رفع الملفين الفارغ والمليء أولاً", "error");
+
+        log("⏳ جاري سحب البكسلات والتحليل الذكي...");
+        
+        try {
+            const canvasE = await pdfToCanvas(f1);
+            const canvasF = await pdfToCanvas(f2);
+            
+            const w = canvasE.width;
+            const h = canvasE.height;
+            const imgE = canvasE.getContext('2d').getImageData(0,0,w,h).data;
+            const imgF = canvasF.getContext('2d').getImageData(0,0,w,h).data;
+
+            let points = [];
+            // القفز (Stride) لتقليل العمليات الحسابية بمقدار 16 مرة
+            for (let y = 0; y < h; y += 4) {
+                for (let x = 0; x < w; x += 4) {
+                    const i = (y * w + x) * 4;
+                    // طرح قيمة اللون الأحمر (كافية للاكتشاف)
+                    if (Math.abs(imgE[i] - imgF[i]) > 70) {
+                        points.push({x, y});
+                    }
+                }
+            }
+
+            // تجميع النقاط (Clustering)
+            detectedPoints = [];
+            points.forEach(p => {
+                let existing = detectedPoints.find(dp => Math.abs(dp.x - p.x) < 50 && Math.abs(dp.y - p.y) < 20);
+                if (!existing) detectedPoints.push({x: p.x, y: p.y});
+            });
+
+            // ترتيب الحقول منطقياً: من الأعلى للأسفل ثم يمين ليسار
+            detectedPoints.sort((a, b) => (Math.abs(a.y - b.y) > 15 ? a.y - b.y : b.x - a.x));
+
+            visualize(canvasE);
+            templateBytes = await f1.arrayBuffer();
+            document.getElementById('generateBtn').disabled = false;
+            log(`✅ تم اكتشاف ${detectedPoints.length} حقول. ارفع الإكسل ثم اضغط توليد.`, "success");
+
+        } catch (err) {
+            log("❌ خطأ أثناء التحليل: " + err.message, "error");
+        }
+    }
+
+    function visualize(baseCanvas) {
+        const wrapper = document.getElementById('canvasWrapper');
+        const mainCanvas = document.getElementById('previewCanvas');
+        wrapper.style.display = 'block';
+        mainCanvas.width = baseCanvas.width;
+        mainCanvas.height = baseCanvas.height;
+        const ctx = mainCanvas.getContext('2d');
+        ctx.drawImage(baseCanvas, 0, 0);
+        
+        ctx.fillStyle = "rgba(26, 115, 232, 0.2)";
+        ctx.strokeStyle = "#1a73e8";
+        ctx.font = "bold 16px Arial";
+
+        detectedPoints.forEach((p, i) => {
+            ctx.strokeRect(p.x - 40, p.y - 15, 80, 25);
+            ctx.fillText(i + 1, p.x, p.y - 20);
         });
-      }
-    });
-    const pdfBytes=await pdfDoc.save();
-    const blob=new Blob([pdfBytes],{type:"application/pdf"});
-    const link=document.createElement('a');
-    link.href=URL.createObjectURL(blob);
-    link.download=`Document_${row[0]||"new"}.pdf`;
-    link.click();
-  }
-  updateStatus("✅ تم إصدار جميع الملفات!",true);
-}
+    }
+
+    // 3. قراءة الإكسل
+    document.getElementById('excelInput').onchange = (e) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const data = new Uint8Array(ev.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            excelRows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1}).slice(1);
+            log(`📊 تم تحميل إكسل يحتوي على ${excelRows.length} سجل`, "success");
+        };
+        reader.readAsArrayBuffer(e.target.files[0]);
+    };
+
+    // 4. توليد الملف المدمج النهائي
+    async function generateFinalPDF() {
+        if (excelRows.length === 0) return log("❌ يرجى رفع ملف الإكسل أولاً", "error");
+        log("⏳ جاري بناء ملف الـ PDF المدمج...");
+
+        const { PDFDocument, rgb } = PDFLib;
+        const mainPdf = await PDFDocument.create();
+        const templateDoc = await PDFDocument.load(templateBytes);
+
+        for (const row of excelRows) {
+            const [copiedPage] = await mainPdf.copyPages(templateDoc, [0]);
+            const page = mainPdf.addPage(copiedPage);
+            const { width, height } = page.getSize();
+            const canvasW = document.getElementById('previewCanvas').width;
+            const canvasH = document.getElementById('previewCanvas').height;
+
+            detectedPoints.forEach((p, i) => {
+                if (row[i]) {
+                    // تحويل إحداثيات الكانفاس إلى إحداثيات PDF مع مراعاة قلب المحور Y
+                    const pdfX = (p.x / canvasW) * width;
+                    const pdfY = height - ((p.y / canvasH) * height);
+                    
+                    // تحسين بسيط: عكس النص يدوياً إذا كان المتصفح لا يدعم العربية في PDF-Lib
+                    const text = String(row[i]); 
+                    
+                    page.drawText(text, {
+                        x: pdfX - (text.length * 3), // محاذاة تقريبية
+                        y: pdfY,
+                        size: 14,
+                        color: rgb(0, 0, 0)
+                    });
+                }
+            });
+        }
+
+        const mergedBytes = await mainPdf.save();
+        const blob = new Blob([mergedBytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "الشهادات_المدمجة_2026.pdf";
+        a.click();
+        log("✅ اكتملت العملية! تم تحميل الملف.", "success");
+    }
 </script>
+
 </body>
 </html>
+
