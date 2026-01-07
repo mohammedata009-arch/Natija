@@ -2,117 +2,137 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>مولد الشهادات المصحح</title>
-<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
+<title>كويز الدرس الأول - ماجستير مصغر</title>
 <style>
-body{font-family:sans-serif;text-align:center;padding:20px;background:#f0f0f0;}
-input,button{width:100%;margin:10px 0;padding:10px;font-size:16px;}
-button{background:#d35400;color:#fff;border:none;cursor:pointer;}
-.preview{margin-top:20px;text-align:right;max-height:600px;overflow:auto;}
-iframe{border:1px solid #aaa;border-radius:5px;width:100%;height:200px;}
-.status{margin:10px 0;font-weight:bold;color:#555;}
+body { font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; }
+h1 { color: #333; text-align: center; }
+.quiz-container { max-width: 800px; margin: auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
+.question { margin-bottom: 20px; }
+.answers label { display: block; margin-bottom: 8px; cursor: pointer; }
+button { padding: 12px 25px; background: #007bff; color: #fff; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; }
+button:hover { background: #0056b3; }
+.correct { color: green; font-weight: bold; margin-top: 5px; }
+.incorrect { color: red; font-weight: bold; margin-top: 5px; }
+textarea { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; margin-top: 5px; }
+#result { margin-top: 25px; font-size: 18px; font-weight: bold; }
 </style>
 </head>
 <body>
 
-<h2>🎓 مولد الشهادات النهائي</h2>
-<input type="file" id="pdfInput" accept=".pdf">
-<input type="file" id="excelInput" accept=".xlsx,.xls">
-<button onclick="start()">🚀 إنشاء الشهادات</button>
+<div class="quiz-container">
+<h1>كويز الدرس الأول - ماجستير مصغر في الإدارة والتسويق</h1>
 
-<div id="status" class="status"></div>
-<div id="result" class="preview"></div>
+<form id="quizForm">
+
+<!-- السؤال 1 -->
+<div class="question">
+  <p>1. ما هو الهدف الرئيسي للإدارة؟</p>
+  <div class="answers">
+    <label><input type="radio" name="q1" value="0"> أ) زيادة عدد الموظفين</label>
+    <label><input type="radio" name="q1" value="1"> ب) تحقيق الأهداف التنظيمية بكفاءة وفعالية</label>
+    <label><input type="radio" name="q1" value="0"> ج) بيع المنتجات فقط</label>
+    <label><input type="radio" name="q1" value="0"> د) تقليل المصاريف بأي شكل</label>
+  </div>
+  <div id="q1-answer" class="correct" style="display:none;">الإجابة الصحيحة: ب) تحقيق الأهداف التنظيمية بكفاءة وفعالية</div>
+</div>
+
+<!-- السؤال 2 -->
+<div class="question">
+  <p>2. أي من التالي يُعتبر أحد عناصر المزيج التسويقي (Marketing Mix)؟</p>
+  <div class="answers">
+    <label><input type="checkbox" name="q2" value="product"> المنتج (Product)</label>
+    <label><input type="checkbox" name="q2" value="price"> السعر (Price)</label>
+    <label><input type="checkbox" name="q2" value="place"> المكان (Place)</label>
+  </div>
+  <div id="q2-answer" class="correct" style="display:none;">الإجابة الصحيحة: جميع ما ذكر (المنتج + السعر + المكان)</div>
+</div>
+
+<!-- السؤال 3 -->
+<div class="question">
+  <p>3. التسويق يقتصر فقط على الإعلان عن المنتجات. (صح أو خطأ)</p>
+  <div class="answers">
+    <label><input type="radio" name="q3" value="0"> صح</label>
+    <label><input type="radio" name="q3" value="1"> خطأ</label>
+  </div>
+  <div id="q3-answer" class="correct" style="display:none;">الإجابة الصحيحة: خطأ – التسويق يشمل المنتج، السعر، المكان، والترويج.</div>
+</div>
+
+<!-- السؤال 4 -->
+<div class="question">
+  <p>4. التنظيم الجيد يساعد على استغلال الموارد بكفاءة. (صح أو خطأ)</p>
+  <div class="answers">
+    <label><input type="radio" name="q4" value="1"> صح</label>
+    <label><input type="radio" name="q4" value="0"> خطأ</label>
+  </div>
+  <div id="q4-answer" class="correct" style="display:none;">الإجابة الصحيحة: صح</div>
+</div>
+
+<!-- السؤال 5 (تطبيقي) -->
+<div class="question">
+  <p>5. أعط مثالًا على كيفية تطبيق أحد عناصر المزيج التسويقي في مشروع صغير.</p>
+  <textarea id="q5" placeholder="اكتب إجابتك هنا..."></textarea>
+  <div id="q5-answer" class="correct" style="display:none;">
+مثال: إذا كان لديك مشروع عصائر، يمكنك تقديم نكهات جديدة (المنتج)، وضع سعر مناسب (السعر)، البيع في موقع مركزي (المكان)، والترويج عبر وسائل التواصل الاجتماعي (الترويج).
+  </div>
+</div>
+
+<!-- السؤال 6 (تطبيقي) -->
+<div class="question">
+  <p>6. صف خطوة واحدة يمكن للإدارة اتخاذها لتحسين فعالية فريق العمل.</p>
+  <textarea id="q6" placeholder="اكتب إجابتك هنا..."></textarea>
+  <div id="q6-answer" class="correct" style="display:none;">
+مثال: عقد اجتماعات دورية لمتابعة الأداء، تحديد أهداف واضحة لكل موظف، وتشجيع التواصل المفتوح بين أعضاء الفريق.
+  </div>
+</div>
+
+<button type="button" onclick="submitQuiz()">إرسال الإجابات</button>
+</form>
+
+<div id="result"></div>
 
 <script>
-const pdfInput = document.getElementById("pdfInput");
-const excelInput = document.getElementById("excelInput");
-const result = document.getElementById("result");
-const status = document.getElementById("status");
+function submitQuiz() {
+  let score = 0;
 
-function mm2pt(mm){ return mm*72/25.4; }
+  // السؤال 1
+  const q1 = document.querySelector('input[name="q1"]:checked');
+  if(q1 && q1.value == "1") score++;
 
-async function start(){
-    if(!pdfInput.files[0]||!excelInput.files[0]) return alert("اختر الملفات أولاً");
-    result.innerHTML=""; status.innerHTML="⏳ جاري بدء العملية...";
-    const basePdf = await pdfInput.files[0].arrayBuffer();
-    const reader = new FileReader();
-    reader.onload = async e=>{
-        const wb = XLSX.read(new Uint8Array(e.target.result), {type:"array"});
-        const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1});
-        if(rows.length<=1){ status.innerHTML="⚠️ Excel فارغ"; return; }
-        const zip = new JSZip();
+  document.getElementById('q1-answer').style.display = 'block';
 
-        for(let i=1;i<rows.length;i++){
-            const row = rows[i];
-            if(!row[0]) continue; // تجاهل الصفوف الفارغة
-            const data={
-                name: row[0],
-                trainer: row[1]||"غير محدد",
-                hours: row[2]||"غير محدد",
-                date: row[3]||"غير محدد",
-                serial: row[0]
-            };
+  // السؤال 2
+  const q2 = document.querySelectorAll('input[name="q2"]:checked');
+  let q2Correct = Array.from(q2).length === 3; // كل الخيارات الثلاثة
+  if(q2Correct) score++;
+  document.getElementById('q2-answer').style.display = 'block';
 
-            // تحديث الرسالة دون مسح المعاينات
-            status.innerHTML=`⏳ إنشاء شهادة ${i} من ${rows.length-1}: ${data.name}`;
+  // السؤال 3
+  const q3 = document.querySelector('input[name="q3"]:checked');
+  if(q3 && q3.value == "1") score++;
+  document.getElementById('q3-answer').style.display = 'block';
 
-            const pdfBytes = await makePDF(basePdf,data);
-            const safeName = data.name.replace(/[^a-z0-9_\-ء-ي ]/gi,'');
+  // السؤال 4
+  const q4 = document.querySelector('input[name="q4"]:checked');
+  if(q4 && q4.value == "1") score++;
+  document.getElementById('q4-answer').style.display = 'block';
 
-            // إضافة PDF إلى ZIP
-            zip.file(`شهادة_${safeName}.pdf`, pdfBytes);
+  // الأسئلة التطبيقية (5 و6) تُعطي الدرجة دائمًا إذا كتب الطالب شيء
+  const q5Text = document.getElementById('q5').value.trim();
+  if(q5Text) score++;
+  document.getElementById('q5-answer').style.display = 'block';
 
-            // المعاينة الفورية
-            const url = URL.createObjectURL(new Blob([pdfBytes], {type:"application/pdf"}));
-            const div = document.createElement("div");
-            div.style.marginBottom="15px";
-            div.innerHTML = `<strong>${data.name}</strong><br>
-                             <iframe src="${url}"></iframe><br>
-                             <a href="${url}" download="شهادة_${safeName}.pdf">تحميل PDF</a>`;
-            result.appendChild(div);
-        }
+  const q6Text = document.getElementById('q6').value.trim();
+  if(q6Text) score++;
+  document.getElementById('q6-answer').style.display = 'block';
 
-        // رابط ZIP لجميع الشهادات
-        const content = await zip.generateAsync({type:"blob"});
-        const zipUrl = URL.createObjectURL(content);
-        const zipDiv = document.createElement("div");
-        zipDiv.style.marginTop="15px";
-        zipDiv.innerHTML=`⬇️ <a href="${zipUrl}" download="كل_الشهادات.zip">تحميل جميع الشهادات ZIP</a>`;
-        result.appendChild(zipDiv);
+  // عرض النتيجة
+  document.getElementById('result').innerHTML = `🎯 نتيجتك: ${score} من 6`;
 
-        status.innerHTML="✅ تم الانتهاء!";
-    };
-    reader.readAsArrayBuffer(excelInput.files[0]);
-}
-
-// دالة إنشاء PDF لكل شخص
-async function makePDF(bytes,data){
-    const {PDFDocument,StandardFonts,rgb} = PDFLib;
-    const pdf = await PDFDocument.load(bytes);
-    const page = pdf.getPages()[0];
-    const font = await pdf.embedFont(StandardFonts.TimesRomanBold);
-    const {width,height} = page.getSize();
-
-    const drawText = (text,x,y,size)=>{
-        page.drawText(text,{
-            x:mm2pt(x),
-            y:height-mm2pt(y),
-            font,
-            size,
-            color:rgb(0,0,0)
-        });
-    };
-
-    drawText(data.name,105,150,12);
-    drawText("المدرب: "+data.trainer,20,120,8);
-    drawText("عدد الساعات: "+data.hours,20,100,8);
-    drawText("التاريخ: "+data.date,20,80,8);
-    drawText("Serial: "+data.serial,150,120,8);
-
-    return await pdf.save();
+  // إرسال النتيجة إلى واتساب
+  const phone = "249999240574"; // بدون صفر البداية
+  const message = `لقد أكملت كويز الدرس الأول في الإدارة والتسويق. نتيجتي: ${score}/6`;
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  window.open(url, '_blank');
 }
 </script>
 
