@@ -3,252 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>اختبار إدارة الصراعات التفاعلي | رؤية 2030</title>
+    <title>منصة البرامج التخصصية - إدارة محمد طه</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #006C35; /* أخضر الرؤية */
-            --secondary-color: #8E793E; /* ذهبي */
-            --dark-blue: #1A237E;
-            --light-bg: #f8f9fa;
+            --primary: #006C35; /* أخضر الرؤية */
+            --gold: #8E793E;
+            --dark: #1a1a1a;
+            --light: #f4f7f6;
         }
-
         body {
             font-family: 'Tajawal', sans-serif;
-            background-color: var(--light-bg);
+            background-color: var(--light);
             margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            padding: 20px;
         }
-
-        .quiz-container {
-            max-width: 800px;
-            width: 90%;
-            background: #fff;
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
             padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .header-platform {
             text-align: center;
-        }
-
-        header {
-            border-bottom: 2px solid var(--primary-color);
+            border-bottom: 3px solid var(--primary);
             margin-bottom: 30px;
-            padding-bottom: 10px;
+            padding-bottom: 20px;
         }
-
-        .vision-logo {
-            font-weight: bold;
-            color: var(--primary-color);
-            letter-spacing: 2px;
-            margin-bottom: 5px;
-        }
-
-        .progress-bar {
-            height: 10px;
+        .header-platform h1 { color: var(--primary); margin: 5px 0; font-size: 24px; }
+        .header-platform h2 { color: var(--gold); margin: 5px 0; font-size: 20px; }
+        
+        .progress-container {
+            height: 12px;
             background: #e0e0e0;
-            border-radius: 5px;
-            margin-bottom: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
             overflow: hidden;
         }
-
-        .progress-fill {
+        #progress-fill {
             height: 100%;
-            background: var(--primary-color);
+            background: linear-gradient(to left, var(--primary), var(--gold));
             width: 0%;
-            transition: width 0.3s ease;
+            transition: 0.4s;
         }
 
-        .question-box {
-            display: none; /* سيظهر بواسطة JS */
-            animation: fadeIn 0.5s ease;
-        }
+        .question-card { display: none; animation: fadeIn 0.5s; }
+        .question-card.active { display: block; }
 
-        .question-box.active {
-            display: block;
-        }
-
-        .scenario-text {
-            font-size: 1.2rem;
+        .scenario-box {
+            background: #f9f9f9;
+            padding: 20px;
+            border-right: 6px solid var(--primary);
+            border-radius: 8px;
+            font-size: 18px;
             margin-bottom: 20px;
-            color: var(--dark-blue);
-            background: #f0f4f1;
-            padding: 15px;
-            border-radius: 10px;
-            border-right: 5px solid var(--primary-color);
         }
 
-        .options-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .option-item {
-            background: #fff;
+        .options-list { list-style: none; padding: 0; }
+        .option {
+            background: white;
             border: 2px solid #ddd;
-            padding: 12px;
-            margin-bottom: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: bold;
+        }
+        .option:hover { border-color: var(--gold); background: #fffcf5; }
+        .option.correct { border-color: #27ae60; background: #d4edda; color: #155724; }
+        .option.wrong { border-color: #c0392b; background: #f8d7da; color: #721c24; }
+
+        .btn-action {
+            display: inline-block;
+            padding: 12px 30px;
+            background: var(--primary);
+            color: white;
+            border: none;
             border-radius: 8px;
             cursor: pointer;
-            transition: 0.2s;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 15px;
         }
-
-        .option-item:hover {
-            border-color: var(--secondary-color);
-            background-color: #fffdf5;
-        }
-
-        .option-item.correct {
-            border-color: #27ae60;
-            background-color: #d4edda;
-        }
-
-        .option-item.wrong {
-            border-color: #c0392b;
-            background-color: #f8d7da;
-        }
-
-        .score-section {
-            display: none;
-        }
-
-        .btn {
-            background: var(--primary-color);
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1rem;
-            margin-top: 20px;
-        }
-
-        .btn:disabled {
-            background: #ccc;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @media print {
-            .btn, .progress-bar { display: none; }
-            .question-box { display: block !important; border-bottom: 1px solid #ddd; padding: 20px 0; }
-        }
+        #result-screen { text-align: center; display: none; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
-<div class="quiz-container">
-    <header>
-        <div class="vision-logo">SAUDI VISION 2030</div>
-        <h2>اختبار إدارة الصراعات الاستراتيجية</h2>
-        <p>قم بحل 20 سيناريو عملي لتطوير مهاراتك القيادية</p>
-    </header>
-
-    <div class="progress-bar">
-        <div class="progress-fill" id="progressFill"></div>
+<div class="container">
+    <div class="header-platform">
+        <div style="font-weight: bold; color: #555;">منصة البرامج التخصصية</div>
+        <h1>إدارة محمد طه</h1>
+        <h2>برنامج الماجستير المصغر في الإدارة والتسويق</h2>
+        <p>اختبار استراتيجيات إدارة الصراعات (رؤية 2030)</p>
     </div>
 
-    <div id="quizBody">
+    <div class="progress-container">
+        <div id="progress-fill"></div>
+    </div>
+
+    <div id="quiz-body">
         </div>
 
-    <div id="scoreSection" class="score-section">
-        <h3>انتهى الاختبار!</h3>
-        <p id="finalScoreText"></p>
-        <button class="btn" onclick="location.reload()">إعادة الاختبار</button>
-        <button class="btn" style="background:var(--dark-blue)" onclick="window.print()">تحميل نتائجي PDF</button>
+    <div id="result-screen">
+        <h2 style="color: var(--primary);">تم إكمال الاختبار بنجاح!</h2>
+        <div id="final-score" style="font-size: 48px; font-weight: bold; margin: 20px 0;">0/20</div>
+        <p id="grade-text"></p>
+        <p>يرجى إرسال النتيجة للإدارة لاعتماد شهادتك:</p>
+        <input type="text" id="student-name" placeholder="اكتب اسمك الثلاثي هنا" style="padding: 10px; width: 80%; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd;"><br>
+        <button class="btn-action" onclick="sendToWhatsApp()" style="background: #25D366;">إرسال النتيجة عبر واتساب ✅</button>
     </div>
 </div>
 
 <script>
     const quizData = [
-        {
-            q: "موظفون يرفضون استخدام نظام التحول الرقمي الجديد ويفضلون العمل الورقي. ما التصرف الأمثل؟",
-            options: ["إجبارهم بقرار إداري صارم", "تجاهلهم حتى يتقاعدوا", "إشراكهم في التدريب ومنحهم حوافز تقنية", "إلغاء النظام الجديد"],
-            correct: 2,
-            feedback: "إشراك الموظفين (Collaborating) يقلل المقاومة ويبني الولاء للرؤية."
-        },
-        {
-            q: "قسم التسويق يعد بتسليم المنتج في يومين، بينما الإنتاج يحتاج أسبوعاً. كيف تحل الصراع؟",
-            options: ["توبيخ قسم المبيعات", "خفض جودة المنتج لتسريعه", "توحيد المعايير بين القسمين (Alignment)", "إلغاء الطلبات المتأخرة"],
-            correct: 2,
-            feedback: "المحاذاة تضمن مصداقية العلامة التجارية أمام العميل."
-        },
-        {
-            q: "منافس خفض أسعاره بنسبة 30% لجذب عملائك في السوق السعودي. رد فعلك التسويقي؟",
-            options: ["خفض السعر فوراً لنفس المستوى", "التركيز على القيمة المضافة والجودة (Differentiation)", "إغلاق الشركة", "رفع شكوى كيدية ضد المنافس"],
-            correct: 1,
-            feedback: "في الرؤية، التميز بالقيمة (Value) أقوى من حروب الأسعار الهدامة."
-        }
-        // يمكن إضافة الـ 17 سيناريو المتبقية هنا بنفس النمط
+        { q: "موظفون يرفضون التحول الرقمي ويفضلون الورق. الحل الأمثل؟", a: ["إجبارهم بقرار إداري", "إشراكهم في التدريب وحوافز تقنية", "تجاهلهم تماماً", "استبدالهم فوراً"], c: 1 },
+        { q: "صراع بين قسمين على ميزانية واحدة. كيف تقرر؟", a: ["التقسيم بالتساوي", "حسب مواءمة المشروع مع رؤية 2030", "منحها للمدير الأقدم", "إلغاء الميزانية"], c: 1 },
+        { q: "منافس خفض أسعاره 30%. ماذا تفعل؟", a: ["خفض السعر فوراً", "التركيز على القيمة المضافة والجودة", "التوقف عن الإعلان", "مهاجمته إعلامياً"], c: 1 },
+        { q: "صراع بين الإنتاج والمبيعات على موعد التسليم. الأسلوب الأنسب؟", a: ["التجنب", "التعاون (Collaborating)", "الاستسلام للمبيعات", "فرض رأي الإدارة"], c: 1 },
+        { q: "عميل غاضب جداً على تويتر. التصرف الاحترافي؟", a: ["حظر العميل", "الاعتذار العلني والتعويض الفوري", "تجاهل التغريدة", "الرد بهجوم مضاد"], c: 1 },
+        { q: "ماذا يعني مصطلح BATNA في التفاوض؟", a: ["أفضل بديل لاتفاق مفاوض عليه", "اسم برنامج حاسوبي", "منطقة الاتفاق المحتمل", "تحليل القوة والضعف"], c: 0 },
+        { q: "صراع بين جيل الخبرة وجيل الشباب. الحل القيادي؟", a: ["فرض رأي الكبار", "القيادة التشاركية والدمج", "تفضيل الشباب فقط", "عزل الجيلين"], c: 1 },
+        { q: "تحويل الصراع من شخصي لموضوعي يعني:", a: ["معاقبة المخطئ", "فصل الأشخاص عن المشكلة", "تجاهل المشاعر", "تحويله للمحكمة"], c: 1 },
+        { q: "مورد رفع السعر فجأة مستغلاً حاجتك. كيف تتصرف؟", a: ["القبول فوراً", "التفاوض بناءً على بدائل (BATNA)", "إيقاف العمل", "التشهير بالمورد"], c: 1 },
+        { q: "الصراع الوظيفي البناء هو الذي يؤدي لـ:", a: ["الاستقالات", "الابتكار وتحسين الأداء", "توقف العمل", "المشاكل الشخصية"], c: 1 },
+        { q: "خلاف بين التسويق والقانونية على بيانات العملاء. الحل؟", a: ["إرضاء التسويق", "الموازنة بين الربحية والامتثال", "إغلاق قسم القانونية", "تشفير البيانات ومنعها عن الجميع"], c: 1 },
+        { q: "متى نستخدم استراتيجية المنافسة (Competing)؟", a: ["لبناء علاقة", "في حالات الطوارئ القصوى", "مع المشاكل البسيطة", "مع عملاء VIP"], c: 1 },
+        { q: "أول خطوة عند اكتشاف صراع مكتوم بين الموظفين؟", a: ["العقاب", "جمع المعلومات وفهم الأسباب", "النقل لقسم آخر", "التجاهل"], c: 1 },
+        { q: "المرونة في رؤية 2030 تتطلب إدارة صراع تعتمد على:", a: ["قمع الآراء", "تقبل الاختلاف البناء", "التجانس المفرط", "المركزية الشديدة"], c: 1 },
+        { q: "توسيع الكعكة (Expand the Pie) في التفاوض تعني:", a: ["زيادة المال فقط", "خلق قيمة مضافة جديدة للطرفين", "توزيع الخسائر", "الاستسلام"], c: 1 },
+        { q: "دور الذكاء العاطفي في الصراع هو:", a: ["التلاعب بالآخرين", "فهم المشاعر والتحكم في ردود الفعل", "إظهار الضعف", "تجنب المواجهة"], c: 1 },
+        { q: "شركة تلوث البيئة وتواجه صراعاً مع المجتمع. الحل المستدام؟", a: ["دفع رشاوى", "تبني معايير الاستدامة الخضراء", "إنكار التلوث", "نقل المصنع"], c: 1 },
+        { q: "في منهجية Agile، صراع الأولويات يحسم عبر:", a: ["أمر المدير", "قيمة العميل في الـ Sprint Planning", "العمل العشوائي", "الأسهل أولاً"], c: 1 },
+        { q: "الوسيط (Mediator) في الصراع هو شخص:", a: ["يصدر أحكاماً", "يسهل الحوار للوصول لحل توافقي", "ينقل الوشايات", "يعاقب المخطئ"], c: 1 },
+        { q: "أهم قاعدة في صراع المنافسين الشرسين:", a: ["تدميرهم", "التركيز على رضا العميل أولاً", "التقليد الأعمى", "الانسحاب"], c: 1 }
     ];
 
-    let currentQuestion = 0;
+    let currentQ = 0;
     let score = 0;
+    const adminPhone = "9665XXXXXXXX"; // ضع رقم الإدارة هنا بدون +
 
-    const quizBody = document.getElementById('quizBody');
-    const progressFill = document.getElementById('progressFill');
+    function renderQuestion() {
+        if (currentQ >= quizData.length) {
+            showResults();
+            return;
+        }
 
-    function loadQuestion() {
-        const data = quizData[currentQuestion];
-        let optionsHTML = data.options.map((opt, index) => 
-            `<li class="option-item" onclick="checkAnswer(${index})">${opt}</li>`
-        ).join('');
-
-        quizBody.innerHTML = `
-            <div class="question-box active">
-                <p>السؤال ${currentQuestion + 1} من ${quizData.length}</p>
-                <div class="scenario-text">${data.q}</div>
-                <ul class="options-list">${optionsHTML}</ul>
-                <p id="feedback" style="display:none; color: var(--primary-color); font-weight:bold;"></p>
-                <button id="nextBtn" class="btn" style="display:none" onclick="nextQuestion()">السؤال التالي</button>
+        const data = quizData[currentQ];
+        document.getElementById('progress-fill').style.width = `${(currentQ / quizData.length) * 100}%`;
+        
+        let html = `
+            <div class="question-card active">
+                <p style="font-weight:bold; color:var(--primary)">السؤال ${currentQ + 1} من 20</p>
+                <div class="scenario-box">${data.q}</div>
+                <div class="options-list">
+                    ${data.a.map((option, idx) => `
+                        <div class="option" onclick="handleAnswer(${idx})">${option}</div>
+                    `).join('')}
+                </div>
             </div>
         `;
+        document.getElementById('quiz-body').innerHTML = html;
     }
 
-    window.checkAnswer = function(selectedIndex) {
-        const data = quizData[currentQuestion];
-        const options = document.querySelectorAll('.option-item');
-        
-        if (selectedIndex === data.correct) {
-            options[selectedIndex].classList.add('correct');
+    window.handleAnswer = function(idx) {
+        const options = document.querySelectorAll('.option');
+        if (idx === quizData[currentQ].c) {
+            options[idx].classList.add('correct');
             score++;
         } else {
-            options[selectedIndex].classList.add('wrong');
-            options[data.correct].classList.add('correct');
+            options[idx].classList.add('wrong');
+            options[quizData[currentQ].c].classList.add('correct');
         }
-
-        document.getElementById('feedback').innerText = data.feedback;
-        document.getElementById('feedback').style.display = 'block';
-        document.getElementById('nextBtn').style.display = 'inline-block';
         
-        // منع الضغط المتكرر
-        options.forEach(opt => opt.style.pointerEvents = 'none');
-    };
-
-    window.nextQuestion = function() {
-        currentQuestion++;
-        progressFill.style.width = (currentQuestion / quizData.length) * 100 + '%';
-        
-        if (currentQuestion < quizData.length) {
-            loadQuestion();
-        } else {
-            showScore();
-        }
-    };
-
-    function showScore() {
-        quizBody.style.display = 'none';
-        document.getElementById('scoreSection').style.display = 'block';
-        document.getElementById('finalScoreText').innerText = `لقد أجبت على ${score} من أصل ${quizData.length} أسئلة بشكل صحيح.`;
+        setTimeout(() => {
+            currentQ++;
+            renderQuestion();
+        }, 1000);
     }
 
-    loadQuestion();
+    function showResults() {
+        document.getElementById('quiz-body').style.display = 'none';
+        document.getElementById('progress-fill').style.width = '100%';
+        document.getElementById('result-screen').style.display = 'block';
+        document.getElementById('final-score').innerText = `${score}/20`;
+        
+        let msg = "";
+        if (score >= 18) msg = "ممتاز - أنت قائد استراتيجي مبدع!";
+        else if (score >= 14) msg = "جيد جداً - مهاراتك الإدارية قوية.";
+        else msg = "تحتاج لمراجعة بعض مفاهيم إدارة الصراعات.";
+        document.getElementById('grade-text').innerText = msg;
+    }
+
+    window.sendToWhatsApp = function() {
+        const name = document.getElementById('student-name').value;
+        if (!name) { alert("من فضلك اكتب اسمك أولاً"); return; }
+        
+        const text = `*منصة البرامج التخصصية - إدارة محمد طه*\n\nالاسم: ${name}\nالبرنامج: الماجستير المصغر (إدارة وتسويق)\nالنتيجة: ${score} من 20\nالتقييم: ${document.getElementById('grade-text').innerText}`;
+        const url = `https://wa.me/${adminPhone}?text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
+    }
+
+    renderQuestion();
 </script>
 
 </body>
