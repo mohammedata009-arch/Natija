@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #006C35; /* أخضر الرؤية */
+            --primary: #006C35; 
             --gold: #8E793E;
             --dark: #1a1a1a;
             --light: #f4f7f6;
@@ -19,7 +19,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 900px;
+            max-width: 800px;
             margin: auto;
             background: white;
             padding: 30px;
@@ -32,11 +32,11 @@
             margin-bottom: 30px;
             padding-bottom: 20px;
         }
-        .header-platform h1 { color: var(--primary); margin: 5px 0; font-size: 24px; }
-        .header-platform h2 { color: var(--gold); margin: 5px 0; font-size: 20px; }
+        .header-platform h1 { color: var(--primary); margin: 5px 0; font-size: 22px; }
+        .header-platform h2 { color: var(--gold); margin: 5px 0; font-size: 18px; }
         
         .progress-container {
-            height: 12px;
+            height: 10px;
             background: #e0e0e0;
             border-radius: 10px;
             margin-bottom: 25px;
@@ -49,7 +49,7 @@
             transition: 0.4s;
         }
 
-        .question-card { display: none; animation: fadeIn 0.5s; }
+        .question-card { display: none; animation: fadeIn 0.4s; }
         .question-card.active { display: block; }
 
         .scenario-box {
@@ -69,8 +69,9 @@
             margin-bottom: 12px;
             border-radius: 10px;
             cursor: pointer;
-            transition: 0.3s;
+            transition: 0.2s;
             font-weight: bold;
+            text-align: right;
         }
         .option:hover { border-color: var(--gold); background: #fffcf5; }
         .option.correct { border-color: #27ae60; background: #d4edda; color: #155724; }
@@ -79,7 +80,7 @@
         .btn-action {
             display: inline-block;
             padding: 12px 30px;
-            background: var(--primary);
+            background: #25D366;
             color: white;
             border: none;
             border-radius: 8px;
@@ -87,10 +88,11 @@
             font-size: 16px;
             font-weight: bold;
             margin-top: 15px;
+            text-decoration: none;
         }
         #result-screen { text-align: center; display: none; }
         
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -98,68 +100,57 @@
 <div class="container">
     <div class="header-platform">
         <div style="font-weight: bold; color: #555;">منصة البرامج التخصصية</div>
-        <h1>إدارة محمد طه</h1>
-        <h2>برنامج الماجستير المصغر في الإدارة والتسويق</h2>
-        <p>اختبار استراتيجيات إدارة الصراعات (رؤية 2030)</p>
+        <div style="font-size: 1.2rem; color: var(--dark); font-weight: bold;">إدارة محمد طه</div>
+        <h1>برنامج الماجستير المصغر في الإدارة والتسويق</h1>
+        <p>اختبار إدارة الصراعات الاستراتيجية (10 أسئلة)</p>
     </div>
 
     <div class="progress-container">
         <div id="progress-fill"></div>
     </div>
 
-    <div id="quiz-body">
-        </div>
+    <div id="quiz-body"></div>
 
     <div id="result-screen">
-        <h2 style="color: var(--primary);">تم إكمال الاختبار بنجاح!</h2>
-        <div id="final-score" style="font-size: 48px; font-weight: bold; margin: 20px 0;">0/20</div>
-        <p id="grade-text"></p>
-        <p>يرجى إرسال النتيجة للإدارة لاعتماد شهادتك:</p>
-        <input type="text" id="student-name" placeholder="اكتب اسمك الثلاثي هنا" style="padding: 10px; width: 80%; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd;"><br>
-        <button class="btn-action" onclick="sendToWhatsApp()" style="background: #25D366;">إرسال النتيجة عبر واتساب ✅</button>
+        <h2 style="color: var(--primary);">أحسنت! تم إكمال الاختبار</h2>
+        <div id="final-score" style="font-size: 50px; font-weight: bold; margin: 15px 0; color: var(--gold);">0/10</div>
+        <p id="grade-text" style="font-weight: bold; font-size: 1.2rem;"></p>
+        <hr>
+        <p>يرجى إدخال اسمك لإرسال النتيجة للإدارة:</p>
+        <input type="text" id="student-name" placeholder="الاسم الثلاثي" style="padding: 12px; width: 85%; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; font-family: 'Tajawal'; text-align: center;"><br>
+        <button class="btn-action" onclick="sendToWhatsApp()">إرسال النتيجة عبر واتساب ✅</button>
     </div>
 </div>
 
 <script>
     const quizData = [
         { q: "موظفون يرفضون التحول الرقمي ويفضلون الورق. الحل الأمثل؟", a: ["إجبارهم بقرار إداري", "إشراكهم في التدريب وحوافز تقنية", "تجاهلهم تماماً", "استبدالهم فوراً"], c: 1 },
-        { q: "صراع بين قسمين على ميزانية واحدة. كيف تقرر؟", a: ["التقسيم بالتساوي", "حسب مواءمة المشروع مع رؤية 2030", "منحها للمدير الأقدم", "إلغاء الميزانية"], c: 1 },
-        { q: "منافس خفض أسعاره 30%. ماذا تفعل؟", a: ["خفض السعر فوراً", "التركيز على القيمة المضافة والجودة", "التوقف عن الإعلان", "مهاجمته إعلامياً"], c: 1 },
-        { q: "صراع بين الإنتاج والمبيعات على موعد التسليم. الأسلوب الأنسب؟", a: ["التجنب", "التعاون (Collaborating)", "الاستسلام للمبيعات", "فرض رأي الإدارة"], c: 1 },
-        { q: "عميل غاضب جداً على تويتر. التصرف الاحترافي؟", a: ["حظر العميل", "الاعتذار العلني والتعويض الفوري", "تجاهل التغريدة", "الرد بهجوم مضاد"], c: 1 },
-        { q: "ماذا يعني مصطلح BATNA في التفاوض؟", a: ["أفضل بديل لاتفاق مفاوض عليه", "اسم برنامج حاسوبي", "منطقة الاتفاق المحتمل", "تحليل القوة والضعف"], c: 0 },
-        { q: "صراع بين جيل الخبرة وجيل الشباب. الحل القيادي؟", a: ["فرض رأي الكبار", "القيادة التشاركية والدمج", "تفضيل الشباب فقط", "عزل الجيلين"], c: 1 },
-        { q: "تحويل الصراع من شخصي لموضوعي يعني:", a: ["معاقبة المخطئ", "فصل الأشخاص عن المشكلة", "تجاهل المشاعر", "تحويله للمحكمة"], c: 1 },
-        { q: "مورد رفع السعر فجأة مستغلاً حاجتك. كيف تتصرف؟", a: ["القبول فوراً", "التفاوض بناءً على بدائل (BATNA)", "إيقاف العمل", "التشهير بالمورد"], c: 1 },
-        { q: "الصراع الوظيفي البناء هو الذي يؤدي لـ:", a: ["الاستقالات", "الابتكار وتحسين الأداء", "توقف العمل", "المشاكل الشخصية"], c: 1 },
-        { q: "خلاف بين التسويق والقانونية على بيانات العملاء. الحل؟", a: ["إرضاء التسويق", "الموازنة بين الربحية والامتثال", "إغلاق قسم القانونية", "تشفير البيانات ومنعها عن الجميع"], c: 1 },
-        { q: "متى نستخدم استراتيجية المنافسة (Competing)؟", a: ["لبناء علاقة", "في حالات الطوارئ القصوى", "مع المشاكل البسيطة", "مع عملاء VIP"], c: 1 },
-        { q: "أول خطوة عند اكتشاف صراع مكتوم بين الموظفين؟", a: ["العقاب", "جمع المعلومات وفهم الأسباب", "النقل لقسم آخر", "التجاهل"], c: 1 },
-        { q: "المرونة في رؤية 2030 تتطلب إدارة صراع تعتمد على:", a: ["قمع الآراء", "تقبل الاختلاف البناء", "التجانس المفرط", "المركزية الشديدة"], c: 1 },
-        { q: "توسيع الكعكة (Expand the Pie) في التفاوض تعني:", a: ["زيادة المال فقط", "خلق قيمة مضافة جديدة للطرفين", "توزيع الخسائر", "الاستسلام"], c: 1 },
-        { q: "دور الذكاء العاطفي في الصراع هو:", a: ["التلاعب بالآخرين", "فهم المشاعر والتحكم في ردود الفعل", "إظهار الضعف", "تجنب المواجهة"], c: 1 },
-        { q: "شركة تلوث البيئة وتواجه صراعاً مع المجتمع. الحل المستدام؟", a: ["دفع رشاوى", "تبني معايير الاستدامة الخضراء", "إنكار التلوث", "نقل المصنع"], c: 1 },
-        { q: "في منهجية Agile، صراع الأولويات يحسم عبر:", a: ["أمر المدير", "قيمة العميل في الـ Sprint Planning", "العمل العشوائي", "الأسهل أولاً"], c: 1 },
-        { q: "الوسيط (Mediator) في الصراع هو شخص:", a: ["يصدر أحكاماً", "يسهل الحوار للوصول لحل توافقي", "ينقل الوشايات", "يعاقب المخطئ"], c: 1 },
-        { q: "أهم قاعدة في صراع المنافسين الشرسين:", a: ["تدميرهم", "التركيز على رضا العميل أولاً", "التقليد الأعمى", "الانسحاب"], c: 1 }
+        { q: "صراع بين قسمين على ميزانية واحدة وفق رؤية 2030. كيف تقرر؟", a: ["التقسيم بالتساوي", "حسب مواءمة المشروع مع مؤشرات الأداء (KPIs)", "منحها للمدير الأقدم", "تأجيل المشروعين"], c: 1 },
+        { q: "منافس خفض أسعاره 30%. ماذا تفعل استراتيجياً؟", a: ["خفض السعر فوراً", "التركيز على القيمة المضافة والجودة (Differentiation)", "إغلاق الشركة", "مهاجمته إعلامياً"], c: 1 },
+        { q: "صراع بين الإنتاج والمبيعات على موعد التسليم. الأسلوب الأنسب؟", a: ["التجنب", "التعاون (Collaborating) لحل جذري", "الاستسلام للمبيعات", "فرض رأي الإدارة بالقوة"], c: 1 },
+        { q: "عميل غاضب جداً على منصات التواصل. التصرف الاحترافي؟", a: ["حظر العميل", "الاعتذار العلني والتعويض الفوري (Recovery)", "تجاهل التغريدة", "الرد بهجوم مضاد"], c: 1 },
+        { q: "ماذا يعني مصطلح BATNA في التفاوض وحل الصراعات؟", a: ["أفضل بديل لاتفاق مفاوض عليه", "منطقة الاتفاق المحتمل", "تحليل المنافسين", "اسم برنامج مبيعات"], c: 0 },
+        { q: "تحويل الصراع من شخصي لموضوعي (Objective) يعني:", a: ["معاقبة المخطئ", "فصل الأشخاص عن المشكلة والتركيز على الأهداف", "تجاهل المشاعر تماماً", "تحويله للشؤون القانونية"], c: 1 },
+        { q: "الصراع الوظيفي البناء (Functional Conflict) هو الذي يؤدي لـ:", a: ["الاستقالات", "الابتكار وتحسين أداء المنظمة", "توقف العمل", "المشاكل العائلية"], c: 1 },
+        { q: "توسيع الكعكة (Expand the Pie) في حل النزاعات تعني:", a: ["زيادة الميزانية فقط", "خلق قيمة مضافة جديدة تخدم الطرفين", "توزيع الخسائر", "الاستسلام لمطالب الآخر"], c: 1 },
+        { q: "أهم قاعدة في إدارة الصراعات مع المنافسين الشرسين هي:", a: ["تدمير المنافس", "التركيز على رضا وولاء العميل أولاً", "التقليد الأعمى", "الانسحاب من السوق"], c: 1 }
     ];
 
     let currentQ = 0;
     let score = 0;
-    const adminPhone = "9665XXXXXXXX"; // ضع رقم الإدارة هنا بدون +
+    const adminPhone = "249901946410"; 
 
     function renderQuestion() {
         if (currentQ >= quizData.length) {
             showResults();
             return;
         }
-
         const data = quizData[currentQ];
         document.getElementById('progress-fill').style.width = `${(currentQ / quizData.length) * 100}%`;
         
         let html = `
             <div class="question-card active">
-                <p style="font-weight:bold; color:var(--primary)">السؤال ${currentQ + 1} من 20</p>
+                <p style="font-weight:bold; color:var(--primary)">السؤال ${currentQ + 1} من 10</p>
                 <div class="scenario-box">${data.q}</div>
                 <div class="options-list">
                     ${data.a.map((option, idx) => `
@@ -180,33 +171,27 @@
             options[idx].classList.add('wrong');
             options[quizData[currentQ].c].classList.add('correct');
         }
-        
         setTimeout(() => {
             currentQ++;
             renderQuestion();
-        }, 1000);
+        }, 800);
     }
 
     function showResults() {
         document.getElementById('quiz-body').style.display = 'none';
         document.getElementById('progress-fill').style.width = '100%';
         document.getElementById('result-screen').style.display = 'block';
-        document.getElementById('final-score').innerText = `${score}/20`;
+        document.getElementById('final-score').innerText = `${score}/10`;
         
-        let msg = "";
-        if (score >= 18) msg = "ممتاز - أنت قائد استراتيجي مبدع!";
-        else if (score >= 14) msg = "جيد جداً - مهاراتك الإدارية قوية.";
-        else msg = "تحتاج لمراجعة بعض مفاهيم إدارة الصراعات.";
+        let msg = score >= 9 ? "قائد استراتيجي ممتاز!" : score >= 7 ? "جيد جداً - مهارات ممتازة" : "تحتاج لمراجعة المفاهيم";
         document.getElementById('grade-text').innerText = msg;
     }
 
     window.sendToWhatsApp = function() {
         const name = document.getElementById('student-name').value;
-        if (!name) { alert("من فضلك اكتب اسمك أولاً"); return; }
-        
-        const text = `*منصة البرامج التخصصية - إدارة محمد طه*\n\nالاسم: ${name}\nالبرنامج: الماجستير المصغر (إدارة وتسويق)\nالنتيجة: ${score} من 20\nالتقييم: ${document.getElementById('grade-text').innerText}`;
-        const url = `https://wa.me/${adminPhone}?text=${encodeURIComponent(text)}`;
-        window.open(url, '_blank');
+        if (!name) { alert("من فضلك اكتب اسمك الثلاثي"); return; }
+        const text = `*منصة البرامج التخصصية - إدارة محمد طه*\n\nالاسم: ${name}\nالبرنامج: الماجستير المصغر\nالاختبار: إدارة الصراعات\nالنتيجة: ${score} من 10\nالتقييم: ${document.getElementById('grade-text').innerText}`;
+        window.open(`https://wa.me/${adminPhone}?text=${encodeURIComponent(text)}`, '_blank');
     }
 
     renderQuestion();
