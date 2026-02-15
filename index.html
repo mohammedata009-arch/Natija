@@ -1,201 +1,40 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة البرامج التخصصية - إدارة محمد طه</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #006C35; 
-            --gold: #8E793E;
-            --dark: #1a1a1a;
-            --light: #f4f7f6;
-        }
-        body {
-            font-family: 'Tajawal', sans-serif;
-            background-color: var(--light);
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 800px;
-            margin: auto;
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-        .header-platform {
-            text-align: center;
-            border-bottom: 3px solid var(--primary);
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-        }
-        .header-platform h1 { color: var(--primary); margin: 5px 0; font-size: 22px; }
-        .header-platform h2 { color: var(--gold); margin: 5px 0; font-size: 18px; }
-        
-        .progress-container {
-            height: 10px;
-            background: #e0e0e0;
-            border-radius: 10px;
-            margin-bottom: 25px;
-            overflow: hidden;
-        }
-        #progress-fill {
-            height: 100%;
-            background: linear-gradient(to left, var(--primary), var(--gold));
-            width: 0%;
-            transition: 0.4s;
-        }
-
-        .question-card { display: none; animation: fadeIn 0.4s; }
-        .question-card.active { display: block; }
-
-        .scenario-box {
-            background: #f9f9f9;
-            padding: 20px;
-            border-right: 6px solid var(--primary);
-            border-radius: 8px;
-            font-size: 18px;
-            margin-bottom: 20px;
-        }
-
-        .options-list { list-style: none; padding: 0; }
-        .option {
-            background: white;
-            border: 2px solid #ddd;
-            padding: 15px;
-            margin-bottom: 12px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: 0.2s;
-            font-weight: bold;
-            text-align: right;
-        }
-        .option:hover { border-color: var(--gold); background: #fffcf5; }
-        .option.correct { border-color: #27ae60; background: #d4edda; color: #155724; }
-        .option.wrong { border-color: #c0392b; background: #f8d7da; color: #721c24; }
-
-        .btn-action {
-            display: inline-block;
-            padding: 12px 30px;
-            background: #25D366;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            margin-top: 15px;
-            text-decoration: none;
-        }
-        #result-screen { text-align: center; display: none; }
-        
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>متجري بالواقع المعزز - M-TAHA</title>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 </head>
-<body>
 
-<div class="container">
-    <div class="header-platform">
-        <div style="font-weight: bold; color: #555;">منصة البرامج التخصصية</div>
-        <div style="font-size: 1.2rem; color: var(--dark); font-weight: bold;">إدارة محمد طه</div>
-        <h1>برنامج الماجستير المصغر في الإدارة والتسويق</h1>
-        <p>اختبار إدارة الصراعات الاستراتيجية (10 أسئلة)</p>
-    </div>
-
-    <div class="progress-container">
-        <div id="progress-fill"></div>
-    </div>
-
-    <div id="quiz-body"></div>
-
-    <div id="result-screen">
-        <h2 style="color: var(--primary);">أحسنت! تم إكمال الاختبار</h2>
-        <div id="final-score" style="font-size: 50px; font-weight: bold; margin: 15px 0; color: var(--gold);">0/10</div>
-        <p id="grade-text" style="font-weight: bold; font-size: 1.2rem;"></p>
-        <hr>
-        <p>يرجى إدخال اسمك لإرسال النتيجة للإدارة:</p>
-        <input type="text" id="student-name" placeholder="الاسم الثلاثي" style="padding: 12px; width: 85%; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; font-family: 'Tajawal'; text-align: center;"><br>
-        <button class="btn-action" onclick="sendToWhatsApp()">إرسال النتيجة عبر واتساب ✅</button>
-    </div>
-</div>
-
-<script>
-    const quizData = [
-        { q: "موظفون يرفضون التحول الرقمي ويفضلون الورق. الحل الأمثل؟", a: ["إجبارهم بقرار إداري", "إشراكهم في التدريب وحوافز تقنية", "تجاهلهم تماماً", "استبدالهم فوراً"], c: 1 },
-        { q: "صراع بين قسمين على ميزانية واحدة وفق رؤية 2030. كيف تقرر؟", a: ["التقسيم بالتساوي", "حسب مواءمة المشروع مع مؤشرات الأداء (KPIs)", "منحها للمدير الأقدم", "تأجيل المشروعين"], c: 1 },
-        { q: "منافس خفض أسعاره 30%. ماذا تفعل استراتيجياً؟", a: ["خفض السعر فوراً", "التركيز على القيمة المضافة والجودة (Differentiation)", "إغلاق الشركة", "مهاجمته إعلامياً"], c: 1 },
-        { q: "صراع بين الإنتاج والمبيعات على موعد التسليم. الأسلوب الأنسب؟", a: ["التجنب", "التعاون (Collaborating) لحل جذري", "الاستسلام للمبيعات", "فرض رأي الإدارة بالقوة"], c: 1 },
-        { q: "عميل غاضب جداً على منصات التواصل. التصرف الاحترافي؟", a: ["حظر العميل", "الاعتذار العلني والتعويض الفوري (Recovery)", "تجاهل التغريدة", "الرد بهجوم مضاد"], c: 1 },
-        { q: "ماذا يعني مصطلح BATNA في التفاوض وحل الصراعات؟", a: ["أفضل بديل لاتفاق مفاوض عليه", "منطقة الاتفاق المحتمل", "تحليل المنافسين", "اسم برنامج مبيعات"], c: 0 },
-        { q: "تحويل الصراع من شخصي لموضوعي (Objective) يعني:", a: ["معاقبة المخطئ", "فصل الأشخاص عن المشكلة والتركيز على الأهداف", "تجاهل المشاعر تماماً", "تحويله للشؤون القانونية"], c: 1 },
-        { q: "الصراع الوظيفي البناء (Functional Conflict) هو الذي يؤدي لـ:", a: ["الاستقالات", "الابتكار وتحسين أداء المنظمة", "توقف العمل", "المشاكل العائلية"], c: 1 },
-        { q: "توسيع الكعكة (Expand the Pie) في حل النزاعات تعني:", a: ["زيادة الميزانية فقط", "خلق قيمة مضافة جديدة تخدم الطرفين", "توزيع الخسائر", "الاستسلام لمطالب الآخر"], c: 1 },
-        { q: "أهم قاعدة في إدارة الصراعات مع المنافسين الشرسين هي:", a: ["تدمير المنافس", "التركيز على رضا وولاء العميل أولاً", "التقليد الأعمى", "الانسحاب من السوق"], c: 1 }
-    ];
-
-    let currentQ = 0;
-    let score = 0;
-    const adminPhone = "249901946410"; 
-
-    function renderQuestion() {
-        if (currentQ >= quizData.length) {
-            showResults();
-            return;
-        }
-        const data = quizData[currentQ];
-        document.getElementById('progress-fill').style.width = `${(currentQ / quizData.length) * 100}%`;
+<body style="margin: 0; overflow: hidden;">
+    <a-scene 
+        embedded 
+        arjs="sourceType: webcam; debugUIEnabled: false;" 
+        vr-mode-ui="enabled: false">
         
-        let html = `
-            <div class="question-card active">
-                <p style="font-weight:bold; color:var(--primary)">السؤال ${currentQ + 1} من 10</p>
-                <div class="scenario-box">${data.q}</div>
-                <div class="options-list">
-                    ${data.a.map((option, idx) => `
-                        <div class="option" onclick="handleAnswer(${idx})">${option}</div>
-                    `).join('')}
-                </div>
-            </div>
-        `;
-        document.getElementById('quiz-body').innerHTML = html;
-    }
+        <a-marker preset="hiro">
+            
+            <a-box 
+                position="0 0.5 0" 
+                material="color: #059669; opacity: 0.9;" 
+                animation="property: rotation; to: 0 360 0; loop: true; dur: 4000">
+            </a-box>
+            
+            <a-text 
+                value="M-TAHA STORE" 
+                position="0 1.2 0" 
+                color="#059669" 
+                align="center" 
+                rotation="-90 0 0" 
+                scale="1.2 1.2 1.2">
+            </a-text>
 
-    window.handleAnswer = function(idx) {
-        const options = document.querySelectorAll('.option');
-        if (idx === quizData[currentQ].c) {
-            options[idx].classList.add('correct');
-            score++;
-        } else {
-            options[idx].classList.add('wrong');
-            options[quizData[currentQ].c].classList.add('correct');
-        }
-        setTimeout(() => {
-            currentQ++;
-            renderQuestion();
-        }, 800);
-    }
+        </a-marker>
 
-    function showResults() {
-        document.getElementById('quiz-body').style.display = 'none';
-        document.getElementById('progress-fill').style.width = '100%';
-        document.getElementById('result-screen').style.display = 'block';
-        document.getElementById('final-score').innerText = `${score}/10`;
+        <a-entity camera></a-entity>
         
-        let msg = score >= 9 ? "قائد استراتيجي ممتاز!" : score >= 7 ? "جيد جداً - مهارات ممتازة" : "تحتاج لمراجعة المفاهيم";
-        document.getElementById('grade-text').innerText = msg;
-    }
-
-    window.sendToWhatsApp = function() {
-        const name = document.getElementById('student-name').value;
-        if (!name) { alert("من فضلك اكتب اسمك الثلاثي"); return; }
-        const text = `*منصة البرامج التخصصية - إدارة محمد طه*\n\nالاسم: ${name}\nالبرنامج: الماجستير المصغر\nالاختبار: إدارة الصراعات\nالنتيجة: ${score} من 10\nالتقييم: ${document.getElementById('grade-text').innerText}`;
-        window.open(`https://wa.me/${adminPhone}?text=${encodeURIComponent(text)}`, '_blank');
-    }
-
-    renderQuestion();
-</script>
-
+    </a-scene>
 </body>
 </html>
